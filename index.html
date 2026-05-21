@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zone DZ</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="main-nav">
+        <div class="container nav-flex">
+            <div class="logo">Zone DZ
+            </div>
+            <ul class="nav-links">
+                <li><a href="#" onclick="showSection('home')">الرئيسية</a></li>
+                <li><a href="#" onclick="showSection('products')">المنتجات</a></li>
+                <li><a href="#" onclick="showSection('order')">طلب المنتجات</a></li>
+                <li><a href="#" onclick="showSection('customer-reviews')">تقييمات الزبائن</a></li>
+                <li><a href="#" onclick="showSection('contact-us')">تواصل معنا</a></li>
+                <li><a href="#" onclick="showSection('my-orders')">طلباتي</a></li>
+                <li><a href="#" onclick="showSection('support')">الدعم الفني</a></li>
+                <li><a href="#" onclick="showSection('admin')" class="admin-link">لوحة التحكم</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header id="home-header">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Zone DZ</h1>
+                    <p>المتجر الرسمي لـ Zone DZ مرحبا</p>
+                    <p>تسوق الآن بسهولة من صفحة الطلبات المخصصة.</p>
+                    <button class="btn-hero" onclick="showSection('order')">طلب المنتجات</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Store Section -->
+        <section id="home-section" class="app-section active">
+            <div class="store-home">
+                <h2>مرحبا بك في متجر Zone DZ</h2>
+                <p>المتجر الرسمي لـ Zone DZ مرحبا</p>
+                <p>تصفح مجموعتنا واطلب منتجاتك عبر صفحة الطلبات المخصصة.</p>
+                <button class="btn" onclick="showSection('order')">طلب المنتجات</button>
+            </div>
+        </section>
+
+        <section id="order-section" class="app-section">
+            <h2>طلب المنتجات</h2>
+            <div class="order-form">
+                <h3>استمارة طلب جديد</h3>
+                <p>اختر المنتج وأدخل بياناتك لإرسال طلبك مباشرة.</p>
+                <form id="purchase-form">
+                    <div class="form-group">
+                        <label for="full-name">الاسم الكامل:</label>
+                        <input type="text" id="full-name" name="full-name" required placeholder="أدخل اسمك الكامل">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">رقم الهاتف:</label>
+                        <input type="tel" id="phone" name="phone" required placeholder="06XXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="address">العنوان الكامل:</label>
+                        <textarea id="address" name="address" required placeholder="أدخل عنوان السكن بالتفصيل"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-name">المنتج المطلوب:</label>
+                        <input type="text" id="product-name" name="product-name" placeholder="اكتب اسم المنتج هنا" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity">الكمية:</label>
+                        <input type="number" id="quantity" name="quantity" min="1" value="1" required>
+                    </div>
+                    <button type="submit" class="submit-btn">إرسال الطلب</button>
+                </form>
+                <div id="success-message" class="hidden">
+                    <p>تم استلام طلبك بنجاح! يمكنك متابعة طلبك في قسم "طلباتي".</p>
+                    <button class="btn" onclick="showSection('my-orders')">مشاهدة طلباتي</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Client Orders Section -->
+        <section id="my-orders-section" class="app-section">
+            <h2>طلباتي السابقة</h2>
+            <div id="client-orders-list" class="orders-grid">
+                <p class="empty-msg">ليس لديك طلبات حالياً.</p>
+            </div>
+        </section>
+
+        <!-- Support Section (Chat) -->
+        <section id="support-section" class="app-section">
+            <h2>خدمة الزبائن</h2>
+            <div class="chat-container">
+                <div id="chat-box" class="chat-box">
+                    <div class="message system">مرحباً بك! كيف يمكننا مساعدتك اليوم؟</div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chat-input-text" placeholder="اكتب رسالتك هنا...">
+                    <button onclick="sendMessage()" class="btn">إرسال</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Admin Section -->
+        <section id="admin-section" class="app-section admin-section">
+            <h2>لوحة التحكم (للإدارة فقط)</h2>
+            <div class="admin-actions">
+                <button id="admin-login-btn" class="btn btn-small admin-action-btn" onclick="openLoginModal()">دخول الأدمن</button>
+                <button id="admin-logout-btn" class="btn btn-small danger admin-action-btn hidden" onclick="logoutAdmin()">تسجيل الخروج</button>
+            </div>
+            <div class="admin-welcome">
+                <p>مرحباً بك في واجهة الإدارة. يمكنك متابعة الطلبات وتحديث حالتها بسهولة، مع إبقاء الجلسة نشطة حتى تسجيل الخروج.</p>
+            </div>
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <span>إجمالي الطلبات</span>
+                    <strong id="total-orders">0</strong>
+                </div>
+                <div class="stat-card">
+                    <span>إجمالي المبيعات</span>
+                    <strong id="total-sales">0</strong>
+                    <span>دج</span>
+                </div>
+                <div class="stat-card">
+                    <span>عدد الزوار</span>
+                    <strong id="visitor-count">0</strong>
+                </div>
+            </div>
+            <div class="admin-table-container">
+                <table id="admin-orders-table">
+                    <thead>
+                        <tr>
+                            <th>الزبون</th>
+                            <th>الهاتف</th>
+                            <th>المنتج</th>
+                            <th>الكمية</th>
+                            <th>الحالة</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- سيتم ملؤه بواسطة JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section id="products-section" class="app-section">
+            <h2>منتجاتنا</h2>
+            <div class="products-grid">
+                <!-- Products will be loaded here by JS -->
+                <p class="empty-msg">لا توجد منتجات حالياً.</p>
+            </div>
+        </section>
+
+        <!-- Customer Reviews Section -->
+        <section id="customer-reviews-section" class="app-section">
+            <h2>تقييمات الزبائن</h2>
+            <div class="reviews-grid">
+                <!-- Reviews will be loaded here by JS -->
+                <p class="empty-msg">لا توجد تقييمات حالياً.</p>
+            </div>
+            <div class="review-form-container">
+                <h3>شارك تقييمك</h3>
+                <form id="review-form">
+                    <div class="form-group">
+                        <label for="review-name">اسمك:</label>
+                        <input type="text" id="review-name" required placeholder="أدخل اسمك">
+                    </div>
+                    <div class="form-group">
+                        <label for="review-rating">التقييم:</label>
+                        <select id="review-rating" required>
+                            <option value="">اختر التقييم</option>
+                            <option value="5">★★★★★ ممتاز</option>
+                            <option value="4">★★★★ جيد جداً</option>
+                            <option value="3">★★★ جيد</option>
+                            <option value="2">★★ متوسط</option>
+                            <option value="1">★ ضعيف</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="review-text">التعليق:</label>
+                        <textarea id="review-text" required placeholder="اكتب تقييمك هنا..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">إرسال التقييم</button>
+                </form>
+                <div id="review-success-message" class="hidden success-msg">
+                    <p>شكراً لك! تم حفظ تقييمك.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Us Section -->
+        <section id="contact-us-section" class="app-section">
+            <h2>تواصل معنا</h2>
+            <div class="contact-form-container">
+                <p>يمكنك التواصل معنا عبر النموذج التالي:</p>
+                <form id="contact-form">
+                    <div class="form-group">
+                        <label for="contact-name">الاسم الكامل:</label>
+                        <input type="text" id="contact-name" required placeholder="اسمك">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-email">البريد الإلكتروني:</label>
+                        <input type="email" id="contact-email" required placeholder="بريدك الإلكتروني">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-message">رسالتك:</label>
+                        <textarea id="contact-message" required placeholder="اكتب رسالتك هنا..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">إرسال الرسالة</button>
+                </form>
+                <div id="contact-success-message" class="hidden success-msg">
+                    <p>شكراً لك! تم استلام رسالتك بنجاح وسنتواصل معك قريباً.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Promo Notifications Section -->
+        <section id="promo-notifications-section" class="app-section">
+            <h2>إشعارات العروض</h2>
+            <div class="notifications-list">
+                <p class="empty-msg">لا توجد إشعارات عروض حالياً.</p>
+                <!-- Notifications will be displayed here -->
+            </div>
+        </section>
+
+        <!-- Product Search Section -->
+        <section id="product-search-section" class="app-section">
+            <h2>البحث عن المنتجات</h2>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="ابحث عن المنتجات هنا..." class="form-control">
+                <button id="search-button" class="btn">بحث</button>
+            </div>
+            <div id="search-results" class="products-grid">
+                <p class="empty-msg">لا توجد نتائج بحث.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>جميع الحقوق محفوظة &copy; 2026 Zone DZ</p>
+        </div>
+    </footer>
+
+    <!-- Admin Login Modal -->
+    <div id="admin-login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeLoginModal()">&times;</span>
+            <h2>تسجيل الدخول</h2>
+            <form id="admin-login-form">
+                <div class="form-group">
+                    <label for="admin-username">اسم المستخدم:</label>
+                    <input type="text" id="admin-username" required>
+                </div>
+                <div class="form-group password-toggle-group">
+                    <label for="admin-password">كلمة المرور:</label>
+                    <div class="password-toggle-wrapper">
+                        <input type="password" id="admin-password" required>
+                        <button type="button" class="password-toggle-btn" onclick="toggleAdminPassword()" aria-label="Toggle password">عرض</button>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">تسجيل الدخول</button>
+                <p id="login-error-msg" class="error-msg hidden">اسم المستخدم أو كلمة المرور خاطئة.</p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Admin Credentials
+        const browserStorageKey = `chatMessages_${navigator.userAgent.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+        const adminUsername = 'admin';
+        const adminPassword = 'kiek2003';
+        let isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+
+        function showSection(sectionId) {
+            const header = document.getElementById('home-header');
+            if (sectionId === 'home') {
+                header.style.display = 'block';
+            } else {
+                header.style.display = 'none';
+            }
+
+            if (sectionId === 'admin') {
+                if (isAdminLoggedIn) {
+                    document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
+                    document.getElementById('admin-section').classList.add('active');
+                    renderAdminOrders();
+                } else {
+                    openLoginModal();
+                }
+                return;
+            }
+
+            document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
+            const sectionElementId = sectionId.endsWith('-section') ? sectionId : `${sectionId}-section`;
+            const targetSection = document.getElementById(sectionElementId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+
+            if (sectionId === 'my-orders') renderClientOrders();
+            if (sectionId === 'products') renderProducts();
+            if (sectionId === 'offers') renderOffers();
+            if (sectionId === 'best-sellers') renderBestSellers();
+            if (sectionId === 'customer-reviews') renderCustomerReviews();
+            if (sectionId === 'promo-notifications') renderPromoNotifications();
+            if (sectionId === 'product-search') renderSearchResults(document.getElementById('search-input')?.value || '');
+        }
+
+        // Sample product and promo data
+        const productsData = [
+            {
+                id: 1,
+                name: 'شريط إضاءة LED الذكي RGB',
+                description: 'شريط إضاءة قابل للتعديل يحتوي على 16 مليون لون، متوافق مع الموسيقى والتطبيق، ويعمل لمدة طويلة.',
+                price: 4500,
+                image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800',
+                features: ['تحكم ذكي', 'سهل التركيب', 'ضوء متغير']
+            },
+            {
+                id: 2,
+                name: 'مصباح مكتب LED محمول',
+                description: 'مصباح مكتبي أنيق مع إضاءة قابلة للتغيير وشاحن USB مدمج للهواتف.',
+                price: 3200,
+                image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=800',
+                features: ['محمول', 'شاحن USB', 'سطوع قابل للتعديل']
+            },
+            {
+                id: 3,
+                name: 'مصباح طاولة LED ذكي',
+                description: 'مصباح طاولة ذكي مع تحكم صوتي وإعدادات لون مخصصة لأجواء الراحة والعمل.',
+                price: 3800,
+                image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&q=80&w=800',
+                features: ['تحكم صوتي', 'إضاءة مريحة', 'تصميم عصري']
+            }
+        ];
+
+        const offersData = [];
+
+        const bestSellersData = [];
+
+        const customerReviewsData = [];
+
+        const notificationsData = [
+            'عرض اليوم: شحن مجاني للطلبات التي تزيد عن 10000 دج.',
+            'استلم الآن واحصل على ضمان لمدة سنة كاملة مع كل منتج.',
+            'منتجات جديدة قادمة قريباً - ترقب أحدث تصميماتنا!' 
+        ];
+
+        function scrollToForm(productName) {
+            document.getElementById('product-name').value = productName;
+            showSection('order');
+            setTimeout(() => {
+                document.getElementById('order-section').scrollIntoView({ behavior: 'smooth' });
+            }, 150);
+        }
+
+        function prepareOrderForm() {
+            const orderInput = document.getElementById('product-name');
+            if (orderInput) {
+                orderInput.value = '';
+            }
+        }
+
+        function renderProducts() {
+            const grid = document.querySelector('#products-section .products-grid');
+            if (!grid) return;
+            if (productsData.length === 0) {
+                grid.innerHTML = '<p class="empty-msg">لا توجد منتجات حالياً.</p>';
+                return;
+            }
+            grid.innerHTML = productsData.map(product => `
+                <div class="product-card">
+                    <img src="${product.image}" alt="${product.name}">
+                    <div class="product-card-content">
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                        <div class="price-wrapper">
+                            <span class="price-amount">${product.price}</span>
+                            <span class="currency">دج</span>
+                        </div>
+                        <button class="btn" onclick="scrollToForm('${product.name}')">اطلب الآن</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderOffers() {
+            const grid = document.querySelector('#offers-section .offers-grid');
+            if (!grid) return;
+            grid.innerHTML = offersData.map(offer => `
+                <div class="offer-card">
+                    <h3>${offer.title}</h3>
+                    <p>${offer.description}</p>
+                    <span class="badge">${offer.badge}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderBestSellers() {
+            const grid = document.querySelector('#best-sellers-section .best-sellers-grid');
+            if (!grid) return;
+            grid.innerHTML = bestSellersData.map(item => `
+                <div class="best-seller-card">
+                    <h4>${item.name}</h4>
+                    <p>السعر: ${item.price} دج</p>
+                </div>
+            `).join('');
+        }
+
+        function renderCustomerReviews() {
+            const grid = document.querySelector('#customer-reviews-section .reviews-grid');
+            if (!grid) return;
+            const reviews = [...customerReviewsData, ...db.getReviews()];
+            if (reviews.length === 0) {
+                grid.innerHTML = '<p class="empty-msg">لا توجد تقييمات حالياً.</p>';
+                return;
+            }
+            grid.innerHTML = reviews.map(review => `
+                <div class="review-card">
+                    <div class="rating-stars">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</div>
+                    <p>"${review.text}"</p>
+                    <span>— ${review.customer}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderPromoNotifications() {
+            const list = document.querySelector('#promo-notifications-section .notifications-list');
+            if (!list) return;
+            list.innerHTML = notificationsData.map(note => `<div class="notification-item">${note}</div>`).join('');
+        }
+
+        function renderSearchResults(query = '') {
+            const resultsContainer = document.getElementById('search-results');
+            const text = query.trim().toLowerCase();
+            const results = text
+                ? productsData.filter(product => product.name.toLowerCase().includes(text) || product.description.toLowerCase().includes(text))
+                : productsData;
+
+            if (!results.length) {
+                resultsContainer.innerHTML = '<p class="empty-msg">لا توجد نتائج بحث.</p>';
+                return;
+            }
+
+            resultsContainer.innerHTML = results.map(product => `
+                <div class="product-card">
+                    <img src="${product.image}" alt="${product.name}">
+                    <div class="product-card-content">
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                        <div class="price-wrapper">
+                            <span class="price-amount">${product.price}</span>
+                            <span class="currency">دج</span>
+                        </div>
+                        <button class="btn" onclick="scrollToForm('${product.name}')">اطلب الآن</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('search-button').addEventListener('click', () => {
+            const query = document.getElementById('search-input').value;
+            renderSearchResults(query);
+            showSection('product-search');
+        });
+
+        document.getElementById('search-input').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('search-button').click();
+            }
+        });
+
+        document.getElementById('contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('contact-name').value;
+            const email = document.getElementById('contact-email').value;
+            const message = document.getElementById('contact-message').value;
+            document.getElementById('contact-success-message').classList.remove('hidden');
+            this.reset();
+            setTimeout(() => {
+                document.getElementById('contact-success-message').classList.add('hidden');
+            }, 4500);
+        });
+
+        document.getElementById('review-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const review = {
+                customer: document.getElementById('review-name').value,
+                rating: parseInt(document.getElementById('review-rating').value, 10),
+                text: document.getElementById('review-text').value.trim(),
+                date: new Date().toLocaleDateString('ar-DZ')
+            };
+            db.saveReview(review);
+            renderCustomerReviews();
+            document.getElementById('review-success-message').classList.remove('hidden');
+            this.reset();
+            setTimeout(() => {
+                document.getElementById('review-success-message').classList.add('hidden');
+            }, 4000);
+        });
+
+        // Admin Login Modal Functions
+        const adminLoginModal = document.getElementById('admin-login-modal');
+        const adminLoginForm = document.getElementById('admin-login-form');
+        const loginErrorMsg = document.getElementById('login-error-msg');
+        const adminLoginBtn = document.getElementById('admin-login-btn');
+        const adminLogoutBtn = document.getElementById('admin-logout-btn');
+        const adminLink = document.querySelector('.admin-link');
+        const adminSection = document.getElementById('admin-section');
+
+
+        function openLoginModal() {
+            adminLoginModal.style.display = 'flex';
+            loginErrorMsg.classList.add('hidden');
+            document.getElementById('admin-username').value = '';
+            document.getElementById('admin-password').value = '';
+            const toggleButton = document.querySelector('.password-toggle-btn');
+            if (toggleButton) toggleButton.textContent = 'عرض';
+            document.getElementById('admin-password').type = 'password';
+        }
+
+        function closeLoginModal() {
+            adminLoginModal.style.display = 'none';
+        }
+
+        function toggleAdminPassword() {
+            const passwordInput = document.getElementById('admin-password');
+            const toggleButton = document.querySelector('.password-toggle-btn');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.textContent = 'إخفاء';
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.textContent = 'عرض';
+            }
+        }
+
+        adminLoginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+
+            if (username === adminUsername && password === adminPassword) {
+                isAdminLoggedIn = true;
+                localStorage.setItem('isAdminLoggedIn', 'true');
+                updateAdminUI();
+                closeLoginModal();
+                showSection('admin'); // Show admin section after successful login
+            } else {
+                loginErrorMsg.classList.remove('hidden');
+            }
+        });
+
+        function logoutAdmin() {
+            isAdminLoggedIn = false;
+            localStorage.setItem('isAdminLoggedIn', 'false');
+            updateAdminUI();
+            showSection('home'); // Redirect to home after logout
+        }
+
+        function updateAdminUI() {
+            if (isAdminLoggedIn) {
+                adminLink.style.display = 'block'; // Make admin link visible if it was hidden
+                adminLoginBtn.classList.add('hidden');
+                adminLogoutBtn.classList.remove('hidden');
+                // Ensure admin section itself is visible if an admin is logged in and navigates there
+            } else {
+                // adminLink.style.display = 'none'; // Only hide if we want to remove access completely from nav for non-admins
+                adminLoginBtn.classList.remove('hidden');
+                adminLogoutBtn.classList.add('hidden');
+                adminSection.classList.remove('active'); // Hide admin section if user logs out or is not admin
+            }
+        }
+
+
+        // Database (LocalStorage)
+        const db = {
+            getOrders: () => JSON.parse(localStorage.getItem('orders') || '[]'),
+            saveOrder: (order) => {
+                const orders = db.getOrders();
+                orders.push({ ...order, id: Date.now(), status: 'قيد الانتظار' });
+                localStorage.setItem('orders', JSON.stringify(orders));
+            },
+            updateStatus: (id, status) => {
+                const orders = db.getOrders();
+                const index = orders.findIndex(o => o.id === id);
+                if (index !== -1) {
+                    orders[index].status = status;
+                    localStorage.setItem('orders', JSON.stringify(orders));
+                    renderAdminOrders();
+                }
+            },
+            getReviews: () => JSON.parse(localStorage.getItem('customerReviews') || '[]'),
+            saveReview: (review) => {
+                const reviews = db.getReviews();
+                reviews.push({ id: Date.now(), ...review });
+                localStorage.setItem('customerReviews', JSON.stringify(reviews));
+            },
+            getChatMessages: () => JSON.parse(localStorage.getItem(browserStorageKey) || '[]'),
+            saveChatMessage: (message) => {
+                const messages = db.getChatMessages();
+                messages.push(message);
+                localStorage.setItem(browserStorageKey, JSON.stringify(messages));
+            }
+        };
+
+        // Form Submission
+        document.getElementById('purchase-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const productName = document.getElementById('product-name').value;
+            const selectedProduct = productsData.find(item => item.name === productName) || productsData[0];
+            const quantity = parseInt(document.getElementById('quantity').value, 10) || 1;
+            const order = {
+                name: document.getElementById('full-name').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                product: productName,
+                quantity: quantity,
+                price: selectedProduct.price * quantity,
+                date: new Date().toLocaleString('ar-DZ')
+            };
+            
+            db.saveOrder(order);
+            this.classList.add('hidden');
+            document.getElementById('success-message').classList.remove('hidden');
+            renderClientOrders();
+            renderAdminOrders();
+        });
+
+        // Client UI
+        function renderClientOrders() {
+            const list = document.getElementById('client-orders-list');
+            const orders = db.getOrders();
+            if (orders.length === 0) {
+                list.innerHTML = '<p class="empty-msg">ليس لديك طلبات حالياً.</p>';
+                return;
+            }
+            list.innerHTML = orders.map(o => `
+                <div class="order-card">
+                    <h4>${o.product}</h4>
+                    <p>الحالة: <span class="status-${o.status === 'تم الشحن' ? 'success' : o.status === 'ملغي' ? 'danger' : 'pending'}">${o.status}</span></p>
+                    <p>التاريخ: ${o.date}</p>
+                    <p>الإجمالي: ${o.price} دج</p>
+                </div>
+            `).join('');
+        }
+
+        // Admin UI
+        function renderAdminOrders() {
+            const tbody = document.querySelector('#admin-orders-table tbody');
+            const orders = db.getOrders();
+            document.getElementById('total-orders').textContent = orders.length;
+            document.getElementById('total-sales').textContent = orders.reduce((acc, curr) => acc + (curr.status === 'تم الشحن' ? curr.price : 0), 0);
+            updateVisitorCount();
+
+            tbody.innerHTML = orders.map(o => `
+                <tr>
+                    <td>${o.name}</td>
+                    <td>${o.phone}</td>
+                    <td>${o.product}</td>
+                    <td>${o.quantity}</td>
+                    <td><span class="status-${o.status === 'تم الشحن' ? 'success' : o.status === 'ملغي' ? 'danger' : 'pending'}">${o.status}</span></td>
+                    <td>
+                        <button onclick="db.updateStatus(${o.id}, 'تم الشحن')" class="btn-small">شحن</button>
+                        <button onclick="db.updateStatus(${o.id}, 'ملغي')" class="btn-small danger">إلغاء</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Support Chat
+        function renderChatMessages() {
+            const box = document.getElementById('chat-box');
+            box.innerHTML = ''; // Clear existing messages
+            const messages = db.getChatMessages();
+            if (messages.length === 0) {
+                box.innerHTML += '<div class="message system">مرحباً بك! كيف يمكننا مساعدتك اليوم؟</div>';
+                return;
+            }
+            messages.forEach(msg => {
+                box.innerHTML += `<div class="message ${msg.type}">${msg.text}</div>`;
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function incrementVisitorCount() {
+            const current = parseInt(localStorage.getItem('visitorCount') || '0', 10);
+            const next = current + 1;
+            localStorage.setItem('visitorCount', next);
+            return next;
+        }
+
+        function updateVisitorCount() {
+            document.getElementById('visitor-count').textContent = localStorage.getItem('visitorCount') || '0';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input-text');
+            const box = document.getElementById('chat-box');
+            if (!input.value.trim()) return;
+
+            const userMsg = { type: 'user', text: input.value };
+            db.saveChatMessage(userMsg);
+            renderChatMessages();
+            
+            // Auto reply (Simulation)
+            setTimeout(() => {
+                const systemMsg = { type: 'system', text: `شكراً لتواصلك معنا. أحد عملائنا سيتواصل معك بخصوص "${userMsg.text}" في أقرب وقت.` };
+                db.saveChatMessage(systemMsg);
+                renderChatMessages();
+            }, 1000);
+
+            input.value = '';
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // Initial Render
+        document.addEventListener('DOMContentLoaded', () => {
+            incrementVisitorCount();
+            updateAdminUI(); // Set initial visibility for admin elements
+            showSection('home');
+            prepareOrderForm();
+            renderAdminOrders();
+            renderClientOrders();
+            renderChatMessages();
+        });
+    </script>
+</body>
+</html>
