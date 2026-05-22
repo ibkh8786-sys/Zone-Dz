@@ -15,14 +15,14 @@
             <div class="logo">Zone DZ
             </div>
             <ul class="nav-links">
-                <li><a href="#" onclick="showSection('home')">الرئيسية</a></li>
+                <li><a href="#" onclick="showSection('home')">الصفحة الرئيسية</a></li>
                 <li><a href="#" onclick="showSection('products')">المنتجات</a></li>
-                <li><a href="#" onclick="showSection('order')">طلب المنتجات</a></li>
+                <li><a href="#" onclick="showSection('order')" class="order-link">طلب المنتجات</a></li>
                 <li><a href="#" onclick="showSection('customer-reviews')">تقييمات الزبائن</a></li>
                 <li><a href="#" onclick="showSection('contact-us')">تواصل معنا</a></li>
                 <li><a href="#" onclick="showSection('my-orders')">طلباتي</a></li>
                 <li><a href="#" onclick="showSection('support')">الدعم الفني</a></li>
-                <li><a href="#" onclick="showSection('admin')" class="admin-link">لوحة التحكم</a></li>
+                <li><a href="#" onclick="showSection('admin')" class="admin-link">لوحة التحكم <span id="admin-badge" class="admin-badge hidden">0</span></a></li>
             </ul>
         </div>
     </nav>
@@ -114,6 +114,7 @@
             <div class="admin-actions">
                 <button id="admin-login-btn" class="btn btn-small admin-action-btn" onclick="openLoginModal()">دخول الأدمن</button>
                 <button id="admin-logout-btn" class="btn btn-small danger admin-action-btn hidden" onclick="logoutAdmin()">تسجيل الخروج</button>
+                <button id="admin-settings-btn" class="btn btn-small admin-action-btn hidden" onclick="openAdminSettings()">إعدادات الإشعارات</button>
             </div>
             <div class="admin-welcome">
                 <p>مرحباً بك في واجهة الإدارة. يمكنك متابعة الطلبات وتحديث حالتها بسهولة، مع إبقاء الجلسة نشطة حتى تسجيل الخروج.</p>
@@ -149,6 +150,31 @@
                         <!-- سيتم ملؤه بواسطة JS -->
                     </tbody>
                 </table>
+            </div>
+            <div class="admin-reviews-container" style="margin-top:25px;">
+                <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">تقييمات الزبائن</h3>
+                <div id="admin-reviews-list" class="reviews-grid">
+                    <p class="empty-msg">لا توجد تقييمات حتى الآن.</p>
+                </div>
+            </div>
+            <div id="admin-settings-panel" class="admin-settings-panel hidden" style="margin-top:20px;">
+                <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">إعدادات الإشعارات (للإدارة فقط)</h3>
+                <div class="form-group">
+                    <label for="settings-email">البريد الإلكتروني للأدمن:</label>
+                    <input type="email" id="settings-email" placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="settings-whatsapp">واتساب (رمز الدولة + الرقم):</label>
+                    <input type="text" id="settings-whatsapp" placeholder="2126...">
+                </div>
+                <div class="form-group">
+                    <label for="settings-facebook">محادثة فيسبوك (اسم الصفحة أو رابط m.me):</label>
+                    <input type="text" id="settings-facebook" placeholder="PageUsername أو https://m.me/..">
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+                    <button class="btn" onclick="saveAdminSettings()">حفظ</button>
+                    <button class="btn btn-small danger" onclick="closeAdminSettings()">إلغاء</button>
+                </div>
             </div>
         </section>
 
@@ -281,6 +307,12 @@
 
         const adminUsername = 'admin';
         const adminPassword = 'kiek2003';
+        // Default admin contact settings for notifications
+        const defaultAdminContacts = {
+            email: '',
+            whatsapp: '213697596402',
+            facebook: 'https://web.facebook.com/profile.php?id=61590291539240&_rdc=1&_rdr#'
+        };
         let isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
 
         function showSection(sectionId) {
@@ -504,6 +536,9 @@
                 date: new Date().toLocaleDateString('ar-DZ')
             };
             db.saveReview(review);
+            // Let admin view the new review
+            renderAdminReviews();
+            notifyAdmin();
             renderCustomerReviews();
             document.getElementById('review-success-message').classList.remove('hidden');
             this.reset();
@@ -519,6 +554,8 @@
         const adminLoginBtn = document.getElementById('admin-login-btn');
         const adminLogoutBtn = document.getElementById('admin-logout-btn');
         const adminLink = document.querySelector('.admin-link');
+        const adminBadge = document.getElementById('admin-badge');
+        const adminSettingsBtn = document.getElementById('admin-settings-btn');
         const adminSection = document.getElementById('admin-section');
 
 
@@ -576,13 +613,17 @@
                 adminLink.style.display = 'block'; // Make admin link visible if it was hidden
                 adminLoginBtn.classList.add('hidden');
                 adminLogoutBtn.classList.remove('hidden');
+                if (adminSettingsBtn) adminSettingsBtn.classList.remove('hidden');
                 // Ensure admin section itself is visible if an admin is logged in and navigates there
             } else {
                 // adminLink.style.display = 'none'; // Only hide if we want to remove access completely from nav for non-admins
                 adminLoginBtn.classList.remove('hidden');
                 adminLogoutBtn.classList.add('hidden');
+                if (adminSettingsBtn) adminSettingsBtn.classList.add('hidden');
                 adminSection.classList.remove('active'); // Hide admin section if user logs out or is not admin
             }
+            // Keep badge in sync
+            try { updateAdminBadge(); } catch(e) {}
         }
 
 
@@ -634,6 +675,10 @@
             };
             
             db.saveOrder(order);
+            // Notify admin about new order (badge/update)
+            notifyAdmin();
+            // Trigger optional external notifications (mailto / WhatsApp) if configured
+            try { triggerExternalNotifications(order); } catch (err) { console.warn(err); }
             this.classList.add('hidden');
             document.getElementById('success-message').classList.remove('hidden');
             renderClientOrders();
@@ -665,6 +710,8 @@
             document.getElementById('total-orders').textContent = orders.length;
             document.getElementById('total-sales').textContent = orders.reduce((acc, curr) => acc + (curr.status === 'تم الشحن' ? curr.price : 0), 0);
             updateVisitorCount();
+            updateAdminBadge();
+            renderAdminReviews();
 
             tbody.innerHTML = orders.map(o => `
                 <tr>
@@ -678,6 +725,109 @@
                         <button onclick="db.updateStatus(${o.id}, 'ملغي')" class="btn-small danger">إلغاء</button>
                     </td>
                 </tr>
+            `).join('');
+        }
+
+        // External notification helpers (mailto and WhatsApp quick-links)
+        function triggerExternalNotifications(order) {
+            if (!order) return;
+            // Prepare simple message
+            const subject = encodeURIComponent(`طلب جديد من ${order.name}`);
+            const body = encodeURIComponent(`اسم: ${order.name}%0Aالهاتف: ${order.phone}%0Aالمنتج: ${order.product}%0Aالكمية: ${order.quantity}%0Aالإجمالي: ${order.price} دج%0Aالعنوان: ${order.address}%0Aالتاريخ: ${order.date}`);
+            // Read stored admin contacts (only admin can set these)
+            const contacts = getAdminContacts();
+            if (contacts.email && contacts.email.trim()) {
+                const mailto = `mailto:${contacts.email}?subject=${subject}&body=${body}`;
+                window.open(mailto, '_blank');
+            }
+            if (contacts.whatsapp && contacts.whatsapp.trim()) {
+                const waText = encodeURIComponent(`طلب جديد - ${order.name}: ${order.product} x${order.quantity} - ${order.phone}`);
+                const waUrl = `https://wa.me/${contacts.whatsapp}?text=${waText}`;
+                window.open(waUrl, '_blank');
+            }
+            if (contacts.facebook && contacts.facebook.trim()) {
+                const messengerUrl = contacts.facebook.startsWith('http') ? contacts.facebook : `https://m.me/${contacts.facebook}`;
+                window.open(messengerUrl, '_blank');
+            }
+        }
+
+        // Admin contacts helper (stored in localStorage under 'adminContacts')
+        function getAdminContacts() {
+            try {
+                return JSON.parse(localStorage.getItem('adminContacts') || '{}');
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function ensureDefaultAdminContacts() {
+            const stored = getAdminContacts();
+            if (!stored.whatsapp && !stored.facebook && !stored.email) {
+                localStorage.setItem('adminContacts', JSON.stringify(defaultAdminContacts));
+            }
+        }
+
+        function loadAdminSettings() {
+            const c = getAdminContacts();
+            document.getElementById('settings-email').value = c.email || '';
+            document.getElementById('settings-whatsapp').value = c.whatsapp || '';
+            document.getElementById('settings-facebook').value = c.facebook || '';
+        }
+
+        function openAdminSettings() {
+            if (!isAdminLoggedIn) return openLoginModal();
+            loadAdminSettings();
+            document.getElementById('admin-settings-panel').classList.remove('hidden');
+            document.getElementById('admin-settings-panel').scrollIntoView({behavior:'smooth'});
+        }
+
+        function closeAdminSettings() {
+            document.getElementById('admin-settings-panel').classList.add('hidden');
+        }
+
+        function saveAdminSettings() {
+            const email = document.getElementById('settings-email').value.trim();
+            const whatsapp = document.getElementById('settings-whatsapp').value.trim();
+            const facebook = document.getElementById('settings-facebook').value.trim();
+            const payload = { email, whatsapp, facebook };
+            localStorage.setItem('adminContacts', JSON.stringify(payload));
+            closeAdminSettings();
+            // optional feedback
+            alert('تم حفظ إعدادات الإشعارات.');
+        }
+
+        // Admin notifications and reviews
+        function notifyAdmin() {
+            // For this frontend-only demo we update the badge and keep orders in localStorage
+            updateAdminBadge();
+        }
+
+        function updateAdminBadge() {
+            if (!adminBadge) return;
+            const orders = db.getOrders();
+            const pending = orders.filter(o => o.status === 'قيد الانتظار').length;
+            if (pending > 0) {
+                adminBadge.textContent = pending;
+                adminBadge.classList.remove('hidden');
+            } else {
+                adminBadge.classList.add('hidden');
+            }
+        }
+
+        function renderAdminReviews() {
+            const container = document.getElementById('admin-reviews-list');
+            if (!container) return;
+            const reviews = db.getReviews();
+            if (!reviews.length) {
+                container.innerHTML = '<p class="empty-msg">لا توجد تقييمات حتى الآن.</p>';
+                return;
+            }
+            container.innerHTML = reviews.map(r => `
+                <div class="review-card">
+                    <div class="rating-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
+                    <p>"${r.text}"</p>
+                    <span>— ${r.customer} • ${r.date || ''}</span>
+                </div>
             `).join('');
         }
 
@@ -730,6 +880,7 @@
         // Initial Render
         document.addEventListener('DOMContentLoaded', () => {
             incrementVisitorCount();
+            ensureDefaultAdminContacts();
             updateAdminUI(); // Set initial visibility for admin elements
             showSection('home');
             prepareOrderForm();
