@@ -808,8 +808,31 @@
                     <p>الحالة: <span class="status-${o.status === 'تم الشحن' ? 'success' : o.status === 'ملغي' ? 'danger' : 'pending'}">${o.status}</span></p>
                     <p>التاريخ: ${o.date}</p>
                     <p>الإجمالي: ${o.price} دج</p>
+                    <div class="order-actions">
+                        ${o.status === 'قيد الانتظار' ? `<button class="btn btn-small danger" onclick="cancelCustomerOrder(${o.id})">إلغاء الطلب</button>` : ''}
+                        ${o.status === 'ملغي' ? `<button class="btn btn-small" onclick="deleteCustomerOrder(${o.id})">حذف الطلب</button>` : ''}
+                    </div>
                 </div>
             `).join('');
+        }
+
+        function cancelCustomerOrder(id) {
+            const order = db.getOrders().find(o => o.id === id);
+            if (!order) return;
+            const confirmed = confirm('هل أنت متأكد أنك تريد إلغاء هذا الطلب؟');
+            if (!confirmed) return;
+            db.updateStatus(id, 'ملغي');
+            addAdminNotification('order', 'طلب ملغي', `العميل: ${order.name} • الهاتف: ${order.phone} • المنتج: ${order.product}`);
+            renderClientOrders();
+            renderAdminOrders();
+        }
+
+        function deleteCustomerOrder(id) {
+            const orders = db.getOrders();
+            const updated = orders.filter(o => o.id !== id);
+            localStorage.setItem('orders', JSON.stringify(updated));
+            renderClientOrders();
+            renderAdminOrders();
         }
 
         function renderAdminOrders() {
