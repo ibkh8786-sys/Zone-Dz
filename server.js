@@ -7,6 +7,7 @@ const dataDir = path.join(__dirname, 'data');
 const ordersFile = path.join(dataDir, 'orders.json');
 const contactsFile = path.join(dataDir, 'contactMessages.json');
 const supportFile = path.join(dataDir, 'supportMessages.json');
+const notificationsFile = path.join(dataDir, 'notifications.json');
 
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir);
@@ -68,6 +69,46 @@ app.post('/api/support-messages', (req, res) => {
   messages.push(message);
   writeJson(supportFile, messages);
   res.json({ ok: true, message });
+});
+
+app.post('/api/notify', (req, res) => {
+  try {
+    const notifications = readJson(notificationsFile);
+    const entry = {
+      id: Date.now(),
+      date: new Date().toISOString(),
+      order: req.body.order || null,
+      contacts: req.body.contacts || null,
+      status: 'queued'
+    };
+    notifications.push(entry);
+    writeJson(notificationsFile, notifications);
+    console.log('Queued notification:', entry);
+    // In a real deployment you'd call WhatsApp/Facebook APIs here
+    res.json({ ok: true, entry });
+  } catch (err) {
+    console.error('Notify error:', err);
+    res.status(500).json({ ok: false, error: String(err) });
+  }
+});
+
+app.get('/api/notifications', (req, res) => {
+  res.json(readJson(notificationsFile));
+});
+
+app.post('/api/notifications/mark', (req, res) => {
+  try {
+    const notifications = readJson(notificationsFile);
+    const { id, status } = req.body || {};
+    const idx = notifications.findIndex(n => String(n.id) === String(id));
+    if (idx === -1) return res.status(404).json({ ok: false, error: 'not found' });
+    notifications[idx].status = status || 'sent';
+    notifications[idx].sentAt = new Date().toISOString();
+    writeJson(notificationsFile, notifications);
+    res.json({ ok: true, notification: notifications[idx] });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: String(err) });
+  }
 });
 
 app.listen(port, () => {

@@ -63,7 +63,7 @@
                     </div>
                     <div class="form-group">
                         <label for="phone">رقم الهاتف:</label>
-                        <input type="tel" id="phone" name="phone" required placeholder="06XXXXXXXX">
+                        <input type="tel" id="phone" name="phone" required placeholder="رقم مكوّن من 10 أرقام" pattern="\d{10}" maxlength="10" inputmode="numeric">
                     </div>
                     <div class="form-group">
                         <label for="address">العنوان الكامل:</label>
@@ -136,6 +136,16 @@
                 <div class="stat-card">
                     <span>رسائل الدعم</span>
                     <strong id="support-message-count">0</strong>
+                </div>
+                <div class="stat-card">
+                    <span>إشعارات</span>
+                    <strong id="admin-notif-count">0</strong>
+                </div>
+            </div>
+            <div class="admin-notifications" style="margin-top:18px;">
+                <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">طابور الإشعارات</h3>
+                <div id="admin-notifications-list" class="reviews-grid">
+                    <p class="empty-msg">لا توجد إشعارات حالياً.</p>
                 </div>
             </div>
             <div class="admin-table-container">
@@ -682,7 +692,7 @@
             getOrders: () => JSON.parse(localStorage.getItem('orders') || '[]'),
             saveOrder: (order) => {
                 const orders = db.getOrders();
-                orders.push({ ...order, id: Date.now(), status: 'قيد الانتظار' });
+                orders.push({ ...order, id: Date.now(), status: 'قيد الانتظار', newOrder: true });
                 localStorage.setItem('orders', JSON.stringify(orders));
             },
             updateStatus: (id, status) => {
@@ -744,19 +754,29 @@
             const productName = document.getElementById('product-name').value;
             const selectedProduct = productsData.find(item => item.name === productName) || productsData[0];
             const quantity = parseInt(document.getElementById('quantity').value, 10) || 1;
+
+            // Phone validation: only digits, exactly 10 digits
+            const phoneRaw = document.getElementById('phone').value || '';
+            const phoneDigits = phoneRaw.replace(/\D/g, '');
+            if (phoneDigits.length !== 10) {
+                alert('الرجاء إدخال رقم هاتف صالح مكوّن من 10 أرقام.');
+                return;
+            }
+
             const order = {
                 name: document.getElementById('full-name').value,
-                phone: document.getElementById('phone').value,
+                phone: phoneDigits,
                 address: document.getElementById('address').value,
                 product: productName,
                 quantity: quantity,
                 price: selectedProduct.price * quantity,
+                newOrder: true,
                 date: new Date().toLocaleString('ar-DZ')
             };
-            
+
             await apiPost('/orders', order, () => db.saveOrder(order));
             notifyAdmin();
-            try { triggerExternalNotifications(order); } catch (err) { console.warn(err); }
+            try { await triggerExternalNotifications(order); } catch (err) { console.warn(err); }
             this.classList.add('hidden');
             document.getElementById('success-message').classList.remove('hidden');
             renderClientOrders();
@@ -785,6 +805,7 @@
         function renderAdminOrders() {
             const tbody = document.querySelector('#admin-orders-table tbody');
             const orders = db.getOrders();
+            markOrdersAsSeen();
             document.getElementById('total-orders').textContent = orders.length;
             document.getElementById('total-sales').textContent = orders.reduce((acc, curr) => acc + (curr.status === 'تم الشحن' ? curr.price : 0), 0);
             updateVisitorCount();
@@ -809,26 +830,30 @@
         }
 
         // External notification helpers (mailto and WhatsApp quick-links)
-        function triggerExternalNotifications(order) {
+        async function triggerExternalNotifications(order) {
             if (!order) return;
-            // Prepare simple message
-            const subject = encodeURIComponent(`طلب جديد من ${order.name}`);
-            const body = encodeURIComponent(`اسم: ${order.name}%0Aالهاتف: ${order.phone}%0Aالمنتج: ${order.product}%0Aالكمية: ${order.quantity}%0Aالإجمالي: ${order.price} دج%0Aالعنوان: ${order.address}%0Aالتاريخ: ${order.date}`);
-            // Read stored admin contacts (only admin can set these)
             const contacts = getAdminContacts();
-            if (contacts.email && contacts.email.trim()) {
-                const mailto = `mailto:${contacts.email}?subject=${subject}&body=${body}`;
-                window.open(mailto, '_blank');
-            }
-            if (contacts.whatsapp && contacts.whatsapp.trim()) {
-                const waText = encodeURIComponent(`طلب جديد - ${order.name}: ${order.product} x${order.quantity} - ${order.phone}`);
-                const waUrl = `https://wa.me/${contacts.whatsapp}?text=${waText}`;
-                window.open(waUrl, '_blank');
-            }
-            if (contacts.facebook && contacts.facebook.trim()) {
-                const messengerUrl = normalizeFacebookMessengerLink(contacts.facebook);
-                window.open(messengerUrl, '_blank');
-            }
+            const payload = { order, contacts };
+
+            // Try server-side notify first; fallback opens links if server is unavailable
+            await apiPost('/notify', payload, () => {
+                // fallback: open mailto / wa.me / m.me as before
+                const subject = encodeURIComponent(`طلب جديد من ${order.name}`);
+                const body = encodeURIComponent(`اسم: ${order.name}%0Aالهاتف: ${order.phone}%0Aالمنتج: ${order.product}%0Aالكمية: ${order.quantity}%0Aالإجمالي: ${order.price} دج%0Aالعنوان: ${order.address}%0Aالتاريخ: ${order.date}`);
+                if (contacts.email && contacts.email.trim()) {
+                    const mailto = `mailto:${contacts.email}?subject=${subject}&body=${body}`;
+                    window.open(mailto, '_blank');
+                }
+                if (contacts.whatsapp && contacts.whatsapp.trim()) {
+                    const waText = encodeURIComponent(`طلب جديد - ${order.name}: ${order.product} x${order.quantity} - ${order.phone}`);
+                    const waUrl = `https://wa.me/${contacts.whatsapp}?text=${waText}`;
+                    window.open(waUrl, '_blank');
+                }
+                if (contacts.facebook && contacts.facebook.trim()) {
+                    const messengerUrl = normalizeFacebookMessengerLink(contacts.facebook);
+                    window.open(messengerUrl, '_blank');
+                }
+            });
         }
 
         // Admin contacts helper (stored in localStorage under 'adminContacts')
@@ -977,10 +1002,62 @@
             `).join('');
         }
 
+        // Sync server orders into localStorage (merge) so admin sees server-saved orders
+        async function syncServerOrders() {
+            const serverOrders = await apiGet('/orders', []);
+            if (!serverOrders || !serverOrders.length) return;
+            const local = db.getOrders();
+            const merged = [...local];
+            serverOrders.forEach(o => {
+                if (!local.find(l => String(l.id) === String(o.id))) merged.push(o);
+            });
+            localStorage.setItem('orders', JSON.stringify(merged));
+            renderAdminOrders();
+        }
+
+        async function fetchAdminNotifications() {
+            const notes = await apiGet('/notifications', []);
+            const container = document.getElementById('admin-notifications-list');
+            const countEl = document.getElementById('admin-notif-count');
+            if (!container) return;
+            if (!notes || !notes.length) {
+                container.innerHTML = '<p class="empty-msg">لا توجد إشعارات حالياً.</p>';
+                if (countEl) countEl.textContent = '0';
+                return;
+            }
+            const queued = notes.filter(n => n.status === 'queued');
+            if (countEl) countEl.textContent = queued.length;
+            container.innerHTML = notes.map(n => `
+                <div class="review-card">
+                    <p><strong>الوقت:</strong> ${new Date(n.date).toLocaleString('ar-DZ')}</p>
+                    <p><strong>الطلب:</strong> ${n.order ? (n.order.product + ' — ' + n.order.phone) : '—'}</p>
+                    <p><strong>الحالة:</strong> ${n.status}</p>
+                    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+                        ${n.status === 'queued' ? `<button class="btn-small" onclick="markNotificationSent(${n.id})">وضع كمُرسل</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function markNotificationSent(id) {
+            await apiPost('/notifications/mark', { id, status: 'sent' }, fetchAdminNotifications);
+            fetchAdminNotifications();
+        }
+
+        function markOrdersAsSeen() {
+            const orders = db.getOrders();
+            const updated = orders.map(order => ({ ...order, newOrder: false }));
+            localStorage.setItem('orders', JSON.stringify(updated));
+        }
+
         function updateAdminBadge() {
             if (!adminBadge) return;
+            if (!isAdminLoggedIn) {
+                adminBadge.classList.add('hidden');
+                return;
+            }
             const orders = db.getOrders();
-            const pending = orders.filter(o => o.status === 'قيد الانتظار').length;
+            const pending = orders.filter(o => o.status === 'قيد الانتظار' && o.newOrder).length;
             if (pending > 0) {
                 adminBadge.textContent = pending;
                 adminBadge.classList.remove('hidden');
@@ -1061,6 +1138,9 @@
             showSection('home');
             prepareOrderForm();
             renderAdminOrders();
+            // try to sync with server if available
+            syncServerOrders();
+            fetchAdminNotifications();
             renderClientOrders();
             renderChatMessages();
         });
