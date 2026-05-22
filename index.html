@@ -55,7 +55,7 @@
             <h2>طلب المنتجات</h2>
             <div class="order-form">
                 <h3>استمارة طلب جديد</h3>
-                <p>اختر المنتج وأدخل بياناتك لإرسال طلبك مباشرة.</p>
+                <p>اختر المنتج وأدخل بياناتك لإرسال طلبك مباشرة. سيتم إرسال الطلب إلى الأدمن عبر القنوات المفعّلة (واتساب أو فيسبوك) إذا كانت متاحة.</p>
                 <form id="purchase-form">
                     <div class="form-group">
                         <label for="full-name">الاسم الكامل:</label>
@@ -80,7 +80,7 @@
                     <button type="submit" class="submit-btn">إرسال الطلب</button>
                 </form>
                 <div id="success-message" class="hidden">
-                    <p>تم استلام طلبك بنجاح! يمكنك متابعة طلبك في قسم "طلباتي".</p>
+                    <p>تم استلام طلبك بنجاح! لقد أُرسل للأدمن ويمكنك متابعة الطلب في قسم "طلباتي".</p>
                     <button class="btn" onclick="showSection('my-orders')">مشاهدة طلباتي</button>
                 </div>
             </div>
@@ -133,6 +133,10 @@
                     <span>عدد الزوار</span>
                     <strong id="visitor-count">0</strong>
                 </div>
+                <div class="stat-card">
+                    <span>رسائل الدعم</span>
+                    <strong id="support-message-count">0</strong>
+                </div>
             </div>
             <div class="admin-table-container">
                 <table id="admin-orders-table">
@@ -155,6 +159,18 @@
                 <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">تقييمات الزبائن</h3>
                 <div id="admin-reviews-list" class="reviews-grid">
                     <p class="empty-msg">لا توجد تقييمات حتى الآن.</p>
+                </div>
+            </div>
+            <div class="admin-feedback-container" style="margin-top:25px;">
+                <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">رسائل نموذج تواصل معنا</h3>
+                <div id="admin-contact-messages" class="reviews-grid">
+                    <p class="empty-msg">لا توجد رسائل دعم حالياً.</p>
+                </div>
+            </div>
+            <div class="admin-feedback-container" style="margin-top:25px;">
+                <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">الدعم الفني</h3>
+                <div id="admin-support-chat-messages" class="reviews-grid">
+                    <p class="empty-msg">لا توجد رسائل تقنية حالياً.</p>
                 </div>
             </div>
             <div id="admin-settings-panel" class="admin-settings-panel hidden" style="margin-top:20px;">
@@ -307,6 +323,7 @@
 
         const adminUsername = 'admin';
         const adminPassword = 'kiek2003';
+        const apiBase = '/api';
         // Default admin contact settings for notifications
         const defaultAdminContacts = {
             email: '',
@@ -314,6 +331,33 @@
             facebook: 'https://web.facebook.com/profile.php?id=61590291539240&_rdc=1&_rdr#'
         };
         let isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+
+        async function apiGet(path, fallback) {
+            try {
+                const response = await fetch(`${apiBase}${path}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                return await response.json();
+            } catch (error) {
+                return fallback;
+            }
+        }
+
+        async function apiPost(path, data, fallback) {
+            try {
+                const response = await fetch(`${apiBase}${path}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error('Network response was not ok');
+                return await response.json();
+            } catch (error) {
+                if (typeof fallback === 'function') fallback();
+                return null;
+            }
+        }
 
         function showSection(sectionId) {
             const header = document.getElementById('home-header');
@@ -515,13 +559,19 @@
             }
         });
 
-        document.getElementById('contact-form').addEventListener('submit', function(e) {
+        document.getElementById('contact-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const name = document.getElementById('contact-name').value;
-            const email = document.getElementById('contact-email').value;
-            const message = document.getElementById('contact-message').value;
+            const contact = {
+                name: document.getElementById('contact-name').value,
+                email: document.getElementById('contact-email').value,
+                message: document.getElementById('contact-message').value,
+                date: new Date().toLocaleDateString('ar-DZ'),
+                status: 'جديد'
+            };
+            await apiPost('/contact-messages', contact, () => db.saveContact(contact));
             document.getElementById('contact-success-message').classList.remove('hidden');
             this.reset();
+            renderAdminContacts();
             setTimeout(() => {
                 document.getElementById('contact-success-message').classList.add('hidden');
             }, 4500);
@@ -655,11 +705,41 @@
                 const messages = db.getChatMessages();
                 messages.push(message);
                 localStorage.setItem(browserStorageKey, JSON.stringify(messages));
+            },
+            getSupportMessages: () => JSON.parse(localStorage.getItem('supportMessages') || '[]'),
+            saveSupportMessage: (supportMessage) => {
+                const messages = db.getSupportMessages();
+                messages.push({ id: Date.now(), replies: [], ...supportMessage });
+                localStorage.setItem('supportMessages', JSON.stringify(messages));
+            },
+            getContacts: () => JSON.parse(localStorage.getItem('contactMessages') || '[]'),
+            saveContact: (contact) => {
+                const contacts = db.getContacts();
+                contacts.push({ id: Date.now(), replies: [], ...contact });
+                localStorage.setItem('contactMessages', JSON.stringify(contacts));
+            },
+            saveContactReply: (id, reply) => {
+                const contacts = db.getContacts();
+                const index = contacts.findIndex(c => c.id === id);
+                if (index !== -1) {
+                    contacts[index].replies = contacts[index].replies || [];
+                    contacts[index].replies.push({ text: reply, date: new Date().toLocaleString('ar-DZ') });
+                    localStorage.setItem('contactMessages', JSON.stringify(contacts));
+                }
+            },
+            saveSupportReply: (id, reply) => {
+                const messages = db.getSupportMessages();
+                const index = messages.findIndex(m => m.id === id);
+                if (index !== -1) {
+                    messages[index].replies = messages[index].replies || [];
+                    messages[index].replies.push({ text: reply, date: new Date().toLocaleString('ar-DZ') });
+                    localStorage.setItem('supportMessages', JSON.stringify(messages));
+                }
             }
         };
 
         // Form Submission
-        document.getElementById('purchase-form').addEventListener('submit', function(e) {
+        document.getElementById('purchase-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const productName = document.getElementById('product-name').value;
             const selectedProduct = productsData.find(item => item.name === productName) || productsData[0];
@@ -674,10 +754,8 @@
                 date: new Date().toLocaleString('ar-DZ')
             };
             
-            db.saveOrder(order);
-            // Notify admin about new order (badge/update)
+            await apiPost('/orders', order, () => db.saveOrder(order));
             notifyAdmin();
-            // Trigger optional external notifications (mailto / WhatsApp) if configured
             try { triggerExternalNotifications(order); } catch (err) { console.warn(err); }
             this.classList.add('hidden');
             document.getElementById('success-message').classList.remove('hidden');
@@ -712,6 +790,8 @@
             updateVisitorCount();
             updateAdminBadge();
             renderAdminReviews();
+            renderAdminContacts();
+            renderAdminSupportMessages();
 
             tbody.innerHTML = orders.map(o => `
                 <tr>
@@ -746,7 +826,7 @@
                 window.open(waUrl, '_blank');
             }
             if (contacts.facebook && contacts.facebook.trim()) {
-                const messengerUrl = contacts.facebook.startsWith('http') ? contacts.facebook : `https://m.me/${contacts.facebook}`;
+                const messengerUrl = normalizeFacebookMessengerLink(contacts.facebook);
                 window.open(messengerUrl, '_blank');
             }
         }
@@ -765,6 +845,29 @@
             if (!stored.whatsapp && !stored.facebook && !stored.email) {
                 localStorage.setItem('adminContacts', JSON.stringify(defaultAdminContacts));
             }
+        }
+
+        function normalizeFacebookMessengerLink(value) {
+            const trimmed = value.trim();
+            if (!trimmed) return trimmed;
+            try {
+                if (trimmed.includes('m.me')) return trimmed;
+                if (trimmed.includes('facebook.com') && trimmed.includes('profile.php?id=')) {
+                    const match = trimmed.match(/id=(\d+)/);
+                    if (match) return `https://m.me/${match[1]}`;
+                }
+                if (trimmed.includes('facebook.com')) {
+                    const url = new URL(trimmed);
+                    const path = url.pathname.replace(/^\/+|\/+$/g, '');
+                    if (path) return `https://m.me/${path}`;
+                }
+            } catch (error) {
+                // ignore and fallback
+            }
+            if (!trimmed.startsWith('http')) {
+                return `https://m.me/${trimmed}`;
+            }
+            return trimmed;
         }
 
         function loadAdminSettings() {
@@ -798,8 +901,80 @@
 
         // Admin notifications and reviews
         function notifyAdmin() {
-            // For this frontend-only demo we update the badge and keep orders in localStorage
             updateAdminBadge();
+        }
+
+        function renderMessageReplies(replies) {
+            if (!replies || !replies.length) return '';
+            return `
+                <div class="replies-list">
+                    ${replies.map(reply => `<div class="admin-reply"><p>${reply.text}</p><span>${reply.date}</span></div>`).join('')}
+                </div>
+            `;
+        }
+
+        function submitContactReply(id) {
+            const textarea = document.getElementById(`contact-reply-input-${id}`);
+            if (!textarea || !textarea.value.trim()) return;
+            db.saveContactReply(id, textarea.value.trim());
+            textarea.value = '';
+            renderAdminContacts();
+        }
+
+        function submitSupportReply(id) {
+            const textarea = document.getElementById(`support-reply-input-${id}`);
+            if (!textarea || !textarea.value.trim()) return;
+            db.saveSupportReply(id, textarea.value.trim());
+            textarea.value = '';
+            renderAdminSupportMessages();
+        }
+
+        function renderAdminContacts() {
+            const container = document.getElementById('admin-contact-messages');
+            const contacts = db.getContacts();
+            document.getElementById('support-message-count').textContent = contacts.length;
+            if (!container) return;
+            if (contacts.length === 0) {
+                container.innerHTML = '<p class="empty-msg">لا توجد رسائل دعم حالياً.</p>';
+                return;
+            }
+            container.innerHTML = contacts.map(c => `
+                <div class="review-card">
+                    <h4>${c.name}</h4>
+                    <p><strong>البريد:</strong> ${c.email}</p>
+                    <p><strong>الرسالة:</strong> ${c.message}</p>
+                    <p><strong>التاريخ:</strong> ${c.date}</p>
+                    <div class="reply-section" id="contact-reply-${c.id}">
+                        ${renderMessageReplies(c.replies)}
+                        <textarea id="contact-reply-input-${c.id}" placeholder="اكتب ردك هنا..." rows="3"></textarea>
+                        <button class="btn-small" onclick="submitContactReply(${c.id})">رد</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderAdminSupportMessages() {
+            const container = document.getElementById('admin-support-chat-messages');
+            const messages = db.getSupportMessages();
+            document.getElementById('support-chat-count').textContent = messages.length;
+            if (!container) return;
+            if (messages.length === 0) {
+                container.innerHTML = '<p class="empty-msg">لا توجد رسائل تقنية حالياً.</p>';
+                return;
+            }
+            container.innerHTML = messages.map(m => `
+                <div class="review-card">
+                    <h4>من: ${m.sender || 'العميل'}</h4>
+                    <p><strong>الرسالة:</strong> ${m.text}</p>
+                    <p><strong>التاريخ:</strong> ${m.date}</p>
+                    <p><strong>الحالة:</strong> ${m.status || 'جديد'}</p>
+                    <div class="reply-section" id="support-reply-${m.id}">
+                        ${renderMessageReplies(m.replies)}
+                        <textarea id="support-reply-input-${m.id}" placeholder="اكتب ردك هنا..." rows="3"></textarea>
+                        <button class="btn-small" onclick="submitSupportReply(${m.id})">رد</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
         function updateAdminBadge() {
@@ -857,16 +1032,17 @@
             document.getElementById('visitor-count').textContent = localStorage.getItem('visitorCount') || '0';
         }
 
-        function sendMessage() {
+        async function sendMessage() {
             const input = document.getElementById('chat-input-text');
             const box = document.getElementById('chat-box');
             if (!input.value.trim()) return;
 
-            const userMsg = { type: 'user', text: input.value };
+            const userMsg = { type: 'user', text: input.value, date: new Date().toLocaleString('ar-DZ'), status: 'جديد' };
             db.saveChatMessage(userMsg);
+            await apiPost('/support-messages', { sender: 'العميل', text: input.value, date: userMsg.date, status: 'جديد' }, () => db.saveSupportMessage({ sender: 'العميل', text: input.value, date: userMsg.date, status: 'جديد' }));
             renderChatMessages();
+            renderAdminSupportMessages();
             
-            // Auto reply (Simulation)
             setTimeout(() => {
                 const systemMsg = { type: 'system', text: `شكراً لتواصلك معنا. أحد عملائنا سيتواصل معك بخصوص "${userMsg.text}" في أقرب وقت.` };
                 db.saveChatMessage(systemMsg);

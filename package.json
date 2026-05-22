@@ -1,0 +1,12 @@
+{
+  "name": "zone-dz-shop",
+  "version": "1.0.0",
+  "description": "Local backend for Zone DZ shop frontend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
