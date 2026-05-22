@@ -719,13 +719,13 @@
             getSupportMessages: () => JSON.parse(localStorage.getItem('supportMessages') || '[]'),
             saveSupportMessage: (supportMessage) => {
                 const messages = db.getSupportMessages();
-                messages.push({ id: Date.now(), replies: [], ...supportMessage });
+                messages.push({ id: Date.now(), replies: [], status: 'جديد', newSupport: true, ...supportMessage });
                 localStorage.setItem('supportMessages', JSON.stringify(messages));
             },
             getContacts: () => JSON.parse(localStorage.getItem('contactMessages') || '[]'),
             saveContact: (contact) => {
                 const contacts = db.getContacts();
-                contacts.push({ id: Date.now(), replies: [], ...contact });
+                contacts.push({ id: Date.now(), replies: [], status: 'جديد', newContact: true, ...contact });
                 localStorage.setItem('contactMessages', JSON.stringify(contacts));
             },
             saveContactReply: (id, reply) => {
@@ -834,26 +834,10 @@
             if (!order) return;
             const contacts = getAdminContacts();
             const payload = { order, contacts };
-
-            // Try server-side notify first; fallback opens links if server is unavailable
-            await apiPost('/notify', payload, () => {
-                // fallback: open mailto / wa.me / m.me as before
-                const subject = encodeURIComponent(`طلب جديد من ${order.name}`);
-                const body = encodeURIComponent(`اسم: ${order.name}%0Aالهاتف: ${order.phone}%0Aالمنتج: ${order.product}%0Aالكمية: ${order.quantity}%0Aالإجمالي: ${order.price} دج%0Aالعنوان: ${order.address}%0Aالتاريخ: ${order.date}`);
-                if (contacts.email && contacts.email.trim()) {
-                    const mailto = `mailto:${contacts.email}?subject=${subject}&body=${body}`;
-                    window.open(mailto, '_blank');
-                }
-                if (contacts.whatsapp && contacts.whatsapp.trim()) {
-                    const waText = encodeURIComponent(`طلب جديد - ${order.name}: ${order.product} x${order.quantity} - ${order.phone}`);
-                    const waUrl = `https://wa.me/${contacts.whatsapp}?text=${waText}`;
-                    window.open(waUrl, '_blank');
-                }
-                if (contacts.facebook && contacts.facebook.trim()) {
-                    const messengerUrl = normalizeFacebookMessengerLink(contacts.facebook);
-                    window.open(messengerUrl, '_blank');
-                }
-            });
+            const result = await apiPost('/notify', payload, null);
+            if (!result) {
+                console.warn('لم يكن خادم الإشعارات متاحاً. يرجى تشغيل الخادم المحلي لإرسال الطلب مباشرة إلى واتساب/فيسبوك.');
+            }
         }
 
         // Admin contacts helper (stored in localStorage under 'adminContacts')
@@ -955,6 +939,7 @@
         }
 
         function renderAdminContacts() {
+            clearNewContactMessages();
             const container = document.getElementById('admin-contact-messages');
             const contacts = db.getContacts();
             document.getElementById('support-message-count').textContent = contacts.length;
@@ -979,6 +964,7 @@
         }
 
         function renderAdminSupportMessages() {
+            clearNewSupportMessages();
             const container = document.getElementById('admin-support-chat-messages');
             const messages = db.getSupportMessages();
             document.getElementById('support-chat-count').textContent = messages.length;
@@ -1050,6 +1036,18 @@
             localStorage.setItem('orders', JSON.stringify(updated));
         }
 
+        function clearNewContactMessages() {
+            const contacts = db.getContacts();
+            const updated = contacts.map(c => ({ ...c, newContact: false }));
+            localStorage.setItem('contactMessages', JSON.stringify(updated));
+        }
+
+        function clearNewSupportMessages() {
+            const messages = db.getSupportMessages();
+            const updated = messages.map(m => ({ ...m, newSupport: false }));
+            localStorage.setItem('supportMessages', JSON.stringify(updated));
+        }
+
         function updateAdminBadge() {
             if (!adminBadge) return;
             if (!isAdminLoggedIn) {
@@ -1057,9 +1055,14 @@
                 return;
             }
             const orders = db.getOrders();
-            const pending = orders.filter(o => o.status === 'قيد الانتظار' && o.newOrder).length;
-            if (pending > 0) {
-                adminBadge.textContent = pending;
+            const contacts = db.getContacts();
+            const supports = db.getSupportMessages();
+            const pendingOrders = orders.filter(o => o.status === 'قيد الانتظار' && o.newOrder).length;
+            const pendingContacts = contacts.filter(c => c.newContact).length;
+            const pendingSupports = supports.filter(m => m.newSupport).length;
+            const totalPending = pendingOrders + pendingContacts + pendingSupports;
+            if (totalPending > 0) {
+                adminBadge.textContent = totalPending;
                 adminBadge.classList.remove('hidden');
             } else {
                 adminBadge.classList.add('hidden');
@@ -1114,16 +1117,21 @@
             const box = document.getElementById('chat-box');
             if (!input.value.trim()) return;
 
+            const messageId = Date.now();
             const userMsg = { type: 'user', text: input.value, date: new Date().toLocaleString('ar-DZ'), status: 'جديد' };
             db.saveChatMessage(userMsg);
-            await apiPost('/support-messages', { sender: 'العميل', text: input.value, date: userMsg.date, status: 'جديد' }, () => db.saveSupportMessage({ sender: 'العميل', text: input.value, date: userMsg.date, status: 'جديد' }));
+            const supportMessage = { id: messageId, sender: 'العميل', text: input.value, date: userMsg.date, status: 'جديد', newSupport: true, replies: [] };
+            await apiPost('/support-messages', supportMessage, () => db.saveSupportMessage(supportMessage));
             renderChatMessages();
             renderAdminSupportMessages();
-            
+
             setTimeout(() => {
-                const systemMsg = { type: 'system', text: `شكراً لتواصلك معنا. أحد عملائنا سيتواصل معك بخصوص "${userMsg.text}" في أقرب وقت.` };
+                const replyText = `شكراً لتواصلك معنا. سيتم الرد عليك قريباً من فريق الدعم.`;
+                const systemMsg = { type: 'system', text: replyText };
                 db.saveChatMessage(systemMsg);
+                db.saveSupportReply(messageId, replyText);
                 renderChatMessages();
+                renderAdminSupportMessages();
             }, 1000);
 
             input.value = '';
