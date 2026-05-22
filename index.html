@@ -15,14 +15,13 @@
             <div class="logo">Zone DZ
             </div>
             <ul class="nav-links">
-                <li><a href="#" onclick="showSection('home')">الصفحة الرئيسية</a></li>
-                <li><a href="#" onclick="showSection('products')">المنتجات</a></li>
-                <li><a href="#" onclick="showSection('order')" class="order-link">طلب المنتجات</a></li>
-                <li><a href="#" onclick="showSection('customer-reviews')">تقييمات الزبائن</a></li>
-                <li><a href="#" onclick="showSection('contact-us')">تواصل معنا</a></li>
-                <li><a href="#" onclick="showSection('my-orders')">طلباتي</a></li>
-                <li><a href="#" onclick="showSection('support')">الدعم الفني</a></li>
-                <li><a href="#" onclick="showSection('admin')" class="admin-link">لوحة التحكم <span id="admin-badge" class="admin-badge hidden">0</span></a></li>
+                <li><a href="javascript:void(0)" onclick="showSection('home')">الصفحة الرئيسية</a></li>
+                <li><a href="javascript:void(0)" onclick="showSection('products')">المنتجات</a></li>
+                <li><a href="javascript:void(0)" onclick="showSection('order')" class="order-link">طلب المنتجات</a></li>
+                <li><a href="javascript:void(0)" onclick="showSection('customer-reviews')">تقييمات الزبائن</a></li>
+                <li><a href="javascript:void(0)" onclick="showSection('contact-support')">تواصل</a></li>
+                <li><a href="javascript:void(0)" onclick="showSection('my-orders')">طلباتي</a></li>
+                <li><a href="javascript:void(0)" onclick="showSection('admin')" class="admin-link">لوحة التحكم <span id="admin-badge" class="admin-badge hidden">0</span></a></li>
             </ul>
         </div>
     </nav>
@@ -55,7 +54,7 @@
             <h2>طلب المنتجات</h2>
             <div class="order-form">
                 <h3>استمارة طلب جديد</h3>
-                <p>اختر المنتج وأدخل بياناتك لإرسال طلبك مباشرة. سيتم إرسال الطلب إلى الأدمن عبر القنوات المفعّلة (واتساب أو فيسبوك) إذا كانت متاحة.</p>
+                <p>اختر المنتج وأدخل بياناتك لإرسال طلبك مباشرة. سيتم إرسال الطلب إلى صفحة الفيسبوك مع تفاصيل الطلب بالكامل.</p>
                 <form id="purchase-form">
                     <div class="form-group">
                         <label for="full-name">الاسم الكامل:</label>
@@ -68,6 +67,58 @@
                     <div class="form-group">
                         <label for="address">العنوان الكامل:</label>
                         <textarea id="address" name="address" required placeholder="أدخل عنوان السكن بالتفصيل"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="wilaya">الولاية:</label>
+                        <select id="wilaya" name="wilaya" required>
+                            <option value="">اختر الولاية</option>
+                            <option value="أدرار">أدرار</option>
+                            <option value="الشلف">الشلف</option>
+                            <option value="الأغواط">الأغواط</option>
+                            <option value="أم البواقي">أم البواقي</option>
+                            <option value="باتنة">باتنة</option>
+                            <option value="بجاية">بجاية</option>
+                            <option value="بسكرة">بسكرة</option>
+                            <option value="بشار">بشار</option>
+                            <option value="البليدة">البليدة</option>
+                            <option value="البويرة">البويرة</option>
+                            <option value="تمنراست">تمنراست</option>
+                            <option value="تبسة">تبسة</option>
+                            <option value="تلمسان">تلمسان</option>
+                            <option value="تيارت">تيارت</option>
+                            <option value="تيزي وزو">تيزي وزو</option>
+                            <option value="الجزائر">الجزائر</option>
+                            <option value="الجلفة">الجلفة</option>
+                            <option value="المدية">المدية</option>
+                            <option value="المسيلة">المسيلة</option>
+                            <option value="معسكر">معسكر</option>
+                            <option value="النعامة">النعامة</option>
+                            <option value="عين الدفلى">عين الدفلى</option>
+                            <option value="البيض">البيض</option>
+                            <option value="قسنطينة">قسنطينة</option>
+                            <option value="جيجل">جيجل</option>
+                            <option value="سطيف">سطيف</option>
+                            <option value="سعيدة">سعيدة</option>
+                            <option value="سكيكدة">سكيكدة</option>
+                            <option value="سيدي بلعباس">سيدي بلعباس</option>
+                            <option value="عنابة">عنابة</option>
+                            <option value="قالمة">قالمة</option>
+                            <option value="البرج">البرج</option>
+                            <option value="بومرداس">بومرداس</option>
+                            <option value="الطارف">الطارف</option>
+                            <option value="تندوف">تندوف</option>
+                            <option value="تيسمسيلت">تيسمسيلت</option>
+                            <option value="الوادي">الوادي</option>
+                            <option value="خنشلة">خنشلة</option>
+                            <option value="سوق أهراس">سوق أهراس</option>
+                            <option value="تيبازة">تيبازة</option>
+                            <option value="ميلة">ميلة</option>
+                            <option value="عين الدفلى">عين الدفلى</option>
+                            <option value="النعامة">النعامة</option>
+                            <option value="عين تموشنت">عين تموشنت</option>
+                            <option value="غرداية">غرداية</option>
+                            <option value="غليزان">غليزان</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="product-name">المنتج المطلوب:</label>
@@ -94,19 +145,7 @@
             </div>
         </section>
 
-        <!-- Support Section (Chat) -->
-        <section id="support-section" class="app-section">
-            <h2>خدمة الزبائن</h2>
-            <div class="chat-container">
-                <div id="chat-box" class="chat-box">
-                    <div class="message system">مرحباً بك! كيف يمكننا مساعدتك اليوم؟</div>
-                </div>
-                <div class="chat-input">
-                    <input type="text" id="chat-input-text" placeholder="اكتب رسالتك هنا...">
-                    <button onclick="sendMessage()" class="btn">إرسال</button>
-                </div>
-            </div>
-        </section>
+
 
         <!-- Admin Section -->
         <section id="admin-section" class="app-section admin-section">
@@ -134,11 +173,11 @@
                     <strong id="visitor-count">0</strong>
                 </div>
                 <div class="stat-card">
-                    <span>رسائل الدعم</span>
-                    <strong id="support-message-count">0</strong>
+                    <span>طلبات معلقة</span>
+                    <strong id="pending-orders-count">0</strong>
                 </div>
                 <div class="stat-card">
-                    <span>إشعارات</span>
+                    <span>إشعارات جديدة</span>
                     <strong id="admin-notif-count">0</strong>
                 </div>
             </div>
@@ -171,18 +210,6 @@
                     <p class="empty-msg">لا توجد تقييمات حتى الآن.</p>
                 </div>
             </div>
-            <div class="admin-feedback-container" style="margin-top:25px;">
-                <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">رسائل نموذج تواصل معنا</h3>
-                <div id="admin-contact-messages" class="reviews-grid">
-                    <p class="empty-msg">لا توجد رسائل دعم حالياً.</p>
-                </div>
-            </div>
-            <div class="admin-feedback-container" style="margin-top:25px;">
-                <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">الدعم الفني</h3>
-                <div id="admin-support-chat-messages" class="reviews-grid">
-                    <p class="empty-msg">لا توجد رسائل تقنية حالياً.</p>
-                </div>
-            </div>
             <div id="admin-settings-panel" class="admin-settings-panel hidden" style="margin-top:20px;">
                 <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">إعدادات الإشعارات (للإدارة فقط)</h3>
                 <div class="form-group">
@@ -190,12 +217,12 @@
                     <input type="email" id="settings-email" placeholder="you@example.com">
                 </div>
                 <div class="form-group">
-                    <label for="settings-whatsapp">واتساب (رمز الدولة + الرقم):</label>
-                    <input type="text" id="settings-whatsapp" placeholder="2126...">
+                    <label for="settings-whatsapp">واتساب الأدمن (رابط wa.me):</label>
+                    <input type="text" id="settings-whatsapp" placeholder="https://wa.me/رقم_كامل">
                 </div>
                 <div class="form-group">
-                    <label for="settings-facebook">محادثة فيسبوك (اسم الصفحة أو رابط m.me):</label>
-                    <input type="text" id="settings-facebook" placeholder="PageUsername أو https://m.me/..">
+                    <label for="settings-facebook">محادثة فيسبوك (رابط Messenger m.me):</label>
+                    <input type="text" id="settings-facebook" placeholder="https://m.me/yourpageid أو اسم صفحتك">
                 </div>
                 <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
                     <button class="btn" onclick="saveAdminSettings()">حفظ</button>
@@ -250,28 +277,21 @@
             </div>
         </section>
 
-        <!-- Contact Us Section -->
-        <section id="contact-us-section" class="app-section">
-            <h2>تواصل معنا</h2>
-            <div class="contact-form-container">
-                <p>يمكنك التواصل معنا عبر النموذج التالي:</p>
-                <form id="contact-form">
-                    <div class="form-group">
-                        <label for="contact-name">الاسم الكامل:</label>
-                        <input type="text" id="contact-name" required placeholder="اسمك">
-                    </div>
-                    <div class="form-group">
-                        <label for="contact-email">البريد الإلكتروني:</label>
-                        <input type="email" id="contact-email" required placeholder="بريدك الإلكتروني">
-                    </div>
-                    <div class="form-group">
-                        <label for="contact-message">رسالتك:</label>
-                        <textarea id="contact-message" required placeholder="اكتب رسالتك هنا..."></textarea>
-                    </div>
-                    <button type="submit" class="submit-btn">إرسال الرسالة</button>
-                </form>
-                <div id="contact-success-message" class="hidden success-msg">
-                    <p>شكراً لك! تم استلام رسالتك بنجاح وسنتواصل معك قريباً.</p>
+        <!-- Contact & Support Section -->
+        <section id="contact-support-section" class="app-section">
+            <h2>تواصل سريع عبر واتساب</h2>
+            <div class="contact-support-wrapper">
+                <div class="contact-form-container">
+                    <h3>واتساب الخاص بنا</h3>
+                    <p>للتواصل السريع والأسئلة حول الطلبات، أرسل رسالة عبر واتساب.</p>
+                    <a id="whatsapp-link" href="https://wa.me/213697596402" target="_blank" class="btn whatsapp-chat-btn">
+                        <span class="whatsapp-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="white" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M20.52 3.48a11.87 11.87 0 0 0-16.78 0 11.881 11.881 0 0 0 0 16.79L2 22l1.74-5.08A11.9 11.9 0 0 0 12 24c3.22 0 6.24-1.26 8.49-3.51a11.88 11.88 0 0 0 0-16.99Zm-8.29 17.38c-2.94 0-5.69-1.14-7.76-3.22A10.86 10.86 0 0 1 2.93 12 10.815 10.815 0 0 1 10.29 3.64c2.88 0 5.58 1.13 7.6 3.18a10.8 10.8 0 0 1 0 15.26 10.75 10.75 0 0 1-7.6 3.18Zm4.33-6.18c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.55.12-.17.24-.65.78-.8.94-.14.17-.28.19-.52.07-.24-.12-1.02-.38-1.95-1.2-.72-.64-1.2-1.42-1.34-1.66-.14-.24-.02-.37.1-.49.1-.1.24-.28.36-.42.12-.14.16-.24.24-.4.08-.17.04-.31-.02-.43-.06-.12-.55-1.34-.75-1.84-.2-.48-.4-.42-.55-.42h-.47c-.17 0-.44.06-.67.32-.23.26-.87.85-.87 2.07 0 1.22.89 2.4 1.01 2.57.12.17 1.75 2.7 4.24 3.79 2.49 1.08 2.49.72 2.94.68.45-.04 1.42-.58 1.63-1.15.21-.56.21-1.04.15-1.15-.05-.1-.18-.17-.42-.29Zm0 0"/>
+                            </svg>
+                        </span>
+                        فتح واتساب
+                    </a>
                 </div>
             </div>
         </section>
@@ -337,7 +357,7 @@
         // Default admin contact settings for notifications
         const defaultAdminContacts = {
             email: '',
-            whatsapp: '213697596402',
+            whatsapp: 'https://wa.me/213697596402',
             facebook: 'https://web.facebook.com/profile.php?id=61590291539240&_rdc=1&_rdr#'
         };
         let isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
@@ -569,23 +589,15 @@
             }
         });
 
-        document.getElementById('contact-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const contact = {
-                name: document.getElementById('contact-name').value,
-                email: document.getElementById('contact-email').value,
-                message: document.getElementById('contact-message').value,
-                date: new Date().toLocaleDateString('ar-DZ'),
-                status: 'جديد'
-            };
-            await apiPost('/contact-messages', contact, () => db.saveContact(contact));
-            document.getElementById('contact-success-message').classList.remove('hidden');
-            this.reset();
-            renderAdminContacts();
-            setTimeout(() => {
-                document.getElementById('contact-success-message').classList.add('hidden');
-            }, 4500);
-        });
+        function updateWhatsAppLink() {
+            const contacts = getAdminContacts();
+            const whatsappLink = contacts.whatsapp || defaultAdminContacts.whatsapp || 'https://wa.me/0000000000';
+            const whatsappAnchor = document.getElementById('whatsapp-link');
+            if (whatsappAnchor) {
+                whatsappAnchor.href = whatsappLink;
+            }
+        }
+
 
         document.getElementById('review-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -596,9 +608,8 @@
                 date: new Date().toLocaleDateString('ar-DZ')
             };
             db.saveReview(review);
-            // Let admin view the new review
+            addAdminNotification('review', 'تقييم جديد', `العميل: ${review.customer} • التقييم: ${review.rating} نجوم • ${review.text}`);
             renderAdminReviews();
-            notifyAdmin();
             renderCustomerReviews();
             document.getElementById('review-success-message').classList.remove('hidden');
             this.reset();
@@ -710,17 +721,25 @@
                 reviews.push({ id: Date.now(), ...review });
                 localStorage.setItem('customerReviews', JSON.stringify(reviews));
             },
+            getNotifications: () => JSON.parse(localStorage.getItem('adminNotifications') || '[]'),
+            saveNotification: (notification) => {
+                const notifications = db.getNotifications();
+                notifications.unshift({ id: Date.now(), ...notification, newNotification: true });
+                localStorage.setItem('adminNotifications', JSON.stringify(notifications));
+            },
+            markNotificationRead: (id) => {
+                const notifications = db.getNotifications();
+                const index = notifications.findIndex(n => n.id === id);
+                if (index !== -1) {
+                    notifications[index].newNotification = false;
+                    localStorage.setItem('adminNotifications', JSON.stringify(notifications));
+                }
+            },
             getChatMessages: () => JSON.parse(localStorage.getItem(browserStorageKey) || '[]'),
             saveChatMessage: (message) => {
                 const messages = db.getChatMessages();
                 messages.push(message);
                 localStorage.setItem(browserStorageKey, JSON.stringify(messages));
-            },
-            getSupportMessages: () => JSON.parse(localStorage.getItem('supportMessages') || '[]'),
-            saveSupportMessage: (supportMessage) => {
-                const messages = db.getSupportMessages();
-                messages.push({ id: Date.now(), replies: [], status: 'جديد', newSupport: true, ...supportMessage });
-                localStorage.setItem('supportMessages', JSON.stringify(messages));
             },
             getContacts: () => JSON.parse(localStorage.getItem('contactMessages') || '[]'),
             saveContact: (contact) => {
@@ -735,15 +754,6 @@
                     contacts[index].replies = contacts[index].replies || [];
                     contacts[index].replies.push({ text: reply, date: new Date().toLocaleString('ar-DZ') });
                     localStorage.setItem('contactMessages', JSON.stringify(contacts));
-                }
-            },
-            saveSupportReply: (id, reply) => {
-                const messages = db.getSupportMessages();
-                const index = messages.findIndex(m => m.id === id);
-                if (index !== -1) {
-                    messages[index].replies = messages[index].replies || [];
-                    messages[index].replies.push({ text: reply, date: new Date().toLocaleString('ar-DZ') });
-                    localStorage.setItem('supportMessages', JSON.stringify(messages));
                 }
             }
         };
@@ -767,6 +777,7 @@
                 name: document.getElementById('full-name').value,
                 phone: phoneDigits,
                 address: document.getElementById('address').value,
+                wilaya: document.getElementById('wilaya').value,
                 product: productName,
                 quantity: quantity,
                 price: selectedProduct.price * quantity,
@@ -775,7 +786,7 @@
             };
 
             await apiPost('/orders', order, () => db.saveOrder(order));
-            notifyAdmin();
+            addAdminNotification('order', 'طلب جديد', `العميل: ${order.name} • الهاتف: ${order.phone} • المنتج: ${order.product} • الكمية: ${order.quantity} • السعر: ${order.price} دج`);
             try { await triggerExternalNotifications(order); } catch (err) { console.warn(err); }
             this.classList.add('hidden');
             document.getElementById('success-message').classList.remove('hidden');
@@ -801,43 +812,58 @@
             `).join('');
         }
 
-        // Admin UI
         function renderAdminOrders() {
             const tbody = document.querySelector('#admin-orders-table tbody');
             const orders = db.getOrders();
             markOrdersAsSeen();
-            document.getElementById('total-orders').textContent = orders.length;
-            document.getElementById('total-sales').textContent = orders.reduce((acc, curr) => acc + (curr.status === 'تم الشحن' ? curr.price : 0), 0);
+            
+            const totalOrdersEl = document.getElementById('total-orders');
+            const totalSalesEl = document.getElementById('total-sales');
+            const pendingOrdersEl = document.getElementById('pending-orders-count');
+            
+            if (totalOrdersEl) totalOrdersEl.textContent = orders.length;
+            if (totalSalesEl) totalSalesEl.textContent = orders.reduce((acc, curr) => acc + (curr.status === 'تم الشحن' ? curr.price : 0), 0);
+            if (pendingOrdersEl) pendingOrdersEl.textContent = orders.filter(o => o.status === 'قيد الانتظار').length;
+            
             updateVisitorCount();
             updateAdminBadge();
             renderAdminReviews();
-            renderAdminContacts();
-            renderAdminSupportMessages();
+            renderAdminNotifications();
 
-            tbody.innerHTML = orders.map(o => `
-                <tr>
-                    <td>${o.name}</td>
-                    <td>${o.phone}</td>
-                    <td>${o.product}</td>
-                    <td>${o.quantity}</td>
-                    <td><span class="status-${o.status === 'تم الشحن' ? 'success' : o.status === 'ملغي' ? 'danger' : 'pending'}">${o.status}</span></td>
-                    <td>
-                        <button onclick="db.updateStatus(${o.id}, 'تم الشحن')" class="btn-small">شحن</button>
-                        <button onclick="db.updateStatus(${o.id}, 'ملغي')" class="btn-small danger">إلغاء</button>
-                    </td>
-                </tr>
-            `).join('');
+            if (tbody) {
+                tbody.innerHTML = orders.map(o => `
+                    <tr>
+                        <td>${o.name}</td>
+                        <td>${o.phone}</td>
+                        <td>${o.product}</td>
+                        <td>${o.quantity}</td>
+                        <td><span class="status-${o.status === 'تم الشحن' ? 'success' : o.status === 'ملغي' ? 'danger' : 'pending'}">${o.status}</span></td>
+                        <td>
+                            <button onclick="db.updateStatus(${o.id}, 'تم الشحن')" class="btn-small">شحن</button>
+                            <button onclick="db.updateStatus(${o.id}, 'ملغي')" class="btn-small danger">إلغاء</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
         }
 
-        // External notification helpers (mailto and WhatsApp quick-links)
+        // External notification helpers (Facebook only)
         async function triggerExternalNotifications(order) {
             if (!order) return;
             const contacts = getAdminContacts();
-            const payload = { order, contacts };
-            const result = await apiPost('/notify', payload, null);
-            if (!result) {
-                console.warn('لم يكن خادم الإشعارات متاحاً. يرجى تشغيل الخادم المحلي لإرسال الطلب مباشرة إلى واتساب/فيسبوك.');
+            const facebookLink = normalizeFacebookMessengerLink(contacts.facebook || defaultAdminContacts.facebook);
+            
+            const message = encodeURIComponent(
+                    `طلب جديد:\n\nالعميل: ${order.name}\nالهاتف: ${order.phone}\nالولاية: ${order.wilaya}\nالمنتج: ${order.product}\nالكمية: ${order.quantity}\nالسعر: ${order.price} دج\nالعنوان: ${order.address}`
+            );
+
+            if (facebookLink.includes('m.me')) {
+                window.open(`${facebookLink}?text=${message}`, '_blank');
+            } else {
+                window.open(facebookLink, '_blank');
             }
+            
+            console.log('تم إرسال الطلب إلى فيسبوك');
         }
 
         // Admin contacts helper (stored in localStorage under 'adminContacts')
@@ -904,8 +930,42 @@
             const payload = { email, whatsapp, facebook };
             localStorage.setItem('adminContacts', JSON.stringify(payload));
             closeAdminSettings();
-            // optional feedback
+            updateWhatsAppLink();
             alert('تم حفظ إعدادات الإشعارات.');
+        }
+
+        function addAdminNotification(type, title, text) {
+            db.saveNotification({ type, title, text, date: new Date().toLocaleString('ar-DZ') });
+            updateAdminBadge();
+            renderAdminNotifications();
+        }
+
+        function renderAdminNotifications() {
+            const container = document.getElementById('admin-notifications-list');
+            const countEl = document.getElementById('admin-notif-count');
+            if (!container) return;
+            const notifications = db.getNotifications();
+            const newCount = notifications.filter(n => n.newNotification).length;
+            if (countEl) countEl.textContent = newCount;
+            if (!notifications.length) {
+                container.innerHTML = '<p class="empty-msg">لا توجد إشعارات حالياً.</p>';
+                return;
+            }
+            container.innerHTML = notifications.map(n => `
+                <div class="review-card ${n.newNotification ? 'new-notif' : ''}">
+                    <h4>${n.title}</h4>
+                    <p>${n.text}</p>
+                    <span>${n.date}</span>
+                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+                        ${n.newNotification ? `<button class="btn-small" onclick="markNotificationRead(${n.id})">وضع كمقروء</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function markNotificationRead(id) {
+            db.markNotificationRead(id);
+            renderAdminNotifications();
         }
 
         // Admin notifications and reviews
@@ -920,72 +980,6 @@
                     ${replies.map(reply => `<div class="admin-reply"><p>${reply.text}</p><span>${reply.date}</span></div>`).join('')}
                 </div>
             `;
-        }
-
-        function submitContactReply(id) {
-            const textarea = document.getElementById(`contact-reply-input-${id}`);
-            if (!textarea || !textarea.value.trim()) return;
-            db.saveContactReply(id, textarea.value.trim());
-            textarea.value = '';
-            renderAdminContacts();
-        }
-
-        function submitSupportReply(id) {
-            const textarea = document.getElementById(`support-reply-input-${id}`);
-            if (!textarea || !textarea.value.trim()) return;
-            db.saveSupportReply(id, textarea.value.trim());
-            textarea.value = '';
-            renderAdminSupportMessages();
-        }
-
-        function renderAdminContacts() {
-            clearNewContactMessages();
-            const container = document.getElementById('admin-contact-messages');
-            const contacts = db.getContacts();
-            document.getElementById('support-message-count').textContent = contacts.length;
-            if (!container) return;
-            if (contacts.length === 0) {
-                container.innerHTML = '<p class="empty-msg">لا توجد رسائل دعم حالياً.</p>';
-                return;
-            }
-            container.innerHTML = contacts.map(c => `
-                <div class="review-card">
-                    <h4>${c.name}</h4>
-                    <p><strong>البريد:</strong> ${c.email}</p>
-                    <p><strong>الرسالة:</strong> ${c.message}</p>
-                    <p><strong>التاريخ:</strong> ${c.date}</p>
-                    <div class="reply-section" id="contact-reply-${c.id}">
-                        ${renderMessageReplies(c.replies)}
-                        <textarea id="contact-reply-input-${c.id}" placeholder="اكتب ردك هنا..." rows="3"></textarea>
-                        <button class="btn-small" onclick="submitContactReply(${c.id})">رد</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderAdminSupportMessages() {
-            clearNewSupportMessages();
-            const container = document.getElementById('admin-support-chat-messages');
-            const messages = db.getSupportMessages();
-            document.getElementById('support-chat-count').textContent = messages.length;
-            if (!container) return;
-            if (messages.length === 0) {
-                container.innerHTML = '<p class="empty-msg">لا توجد رسائل تقنية حالياً.</p>';
-                return;
-            }
-            container.innerHTML = messages.map(m => `
-                <div class="review-card">
-                    <h4>من: ${m.sender || 'العميل'}</h4>
-                    <p><strong>الرسالة:</strong> ${m.text}</p>
-                    <p><strong>التاريخ:</strong> ${m.date}</p>
-                    <p><strong>الحالة:</strong> ${m.status || 'جديد'}</p>
-                    <div class="reply-section" id="support-reply-${m.id}">
-                        ${renderMessageReplies(m.replies)}
-                        <textarea id="support-reply-input-${m.id}" placeholder="اكتب ردك هنا..." rows="3"></textarea>
-                        <button class="btn-small" onclick="submitSupportReply(${m.id})">رد</button>
-                    </div>
-                </div>
-            `).join('');
         }
 
         // Sync server orders into localStorage (merge) so admin sees server-saved orders
@@ -1042,12 +1036,6 @@
             localStorage.setItem('contactMessages', JSON.stringify(updated));
         }
 
-        function clearNewSupportMessages() {
-            const messages = db.getSupportMessages();
-            const updated = messages.map(m => ({ ...m, newSupport: false }));
-            localStorage.setItem('supportMessages', JSON.stringify(updated));
-        }
-
         function updateAdminBadge() {
             if (!adminBadge) return;
             if (!isAdminLoggedIn) {
@@ -1055,12 +1043,10 @@
                 return;
             }
             const orders = db.getOrders();
-            const contacts = db.getContacts();
-            const supports = db.getSupportMessages();
             const pendingOrders = orders.filter(o => o.status === 'قيد الانتظار' && o.newOrder).length;
-            const pendingContacts = contacts.filter(c => c.newContact).length;
-            const pendingSupports = supports.filter(m => m.newSupport).length;
-            const totalPending = pendingOrders + pendingContacts + pendingSupports;
+            const notifications = db.getNotifications();
+            const pendingNotifications = notifications.filter(n => n.newNotification).length;
+            const totalPending = pendingOrders + pendingNotifications;
             if (totalPending > 0) {
                 adminBadge.textContent = totalPending;
                 adminBadge.classList.remove('hidden');
@@ -1086,58 +1072,6 @@
             `).join('');
         }
 
-        // Support Chat
-        function renderChatMessages() {
-            const box = document.getElementById('chat-box');
-            box.innerHTML = ''; // Clear existing messages
-            const messages = db.getChatMessages();
-            if (messages.length === 0) {
-                box.innerHTML += '<div class="message system">مرحباً بك! كيف يمكننا مساعدتك اليوم؟</div>';
-                return;
-            }
-            messages.forEach(msg => {
-                box.innerHTML += `<div class="message ${msg.type}">${msg.text}</div>`;
-            });
-            box.scrollTop = box.scrollHeight;
-        }
-
-        function incrementVisitorCount() {
-            const current = parseInt(localStorage.getItem('visitorCount') || '0', 10);
-            const next = current + 1;
-            localStorage.setItem('visitorCount', next);
-            return next;
-        }
-
-        function updateVisitorCount() {
-            document.getElementById('visitor-count').textContent = localStorage.getItem('visitorCount') || '0';
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('chat-input-text');
-            const box = document.getElementById('chat-box');
-            if (!input.value.trim()) return;
-
-            const messageId = Date.now();
-            const userMsg = { type: 'user', text: input.value, date: new Date().toLocaleString('ar-DZ'), status: 'جديد' };
-            db.saveChatMessage(userMsg);
-            const supportMessage = { id: messageId, sender: 'العميل', text: input.value, date: userMsg.date, status: 'جديد', newSupport: true, replies: [] };
-            await apiPost('/support-messages', supportMessage, () => db.saveSupportMessage(supportMessage));
-            renderChatMessages();
-            renderAdminSupportMessages();
-
-            setTimeout(() => {
-                const replyText = `شكراً لتواصلك معنا. سيتم الرد عليك قريباً من فريق الدعم.`;
-                const systemMsg = { type: 'system', text: replyText };
-                db.saveChatMessage(systemMsg);
-                db.saveSupportReply(messageId, replyText);
-                renderChatMessages();
-                renderAdminSupportMessages();
-            }, 1000);
-
-            input.value = '';
-            box.scrollTop = box.scrollHeight;
-        }
-
         // Initial Render
         document.addEventListener('DOMContentLoaded', () => {
             incrementVisitorCount();
@@ -1145,12 +1079,13 @@
             updateAdminUI(); // Set initial visibility for admin elements
             showSection('home');
             prepareOrderForm();
+            updateWhatsAppLink();
             renderAdminOrders();
             // try to sync with server if available
             syncServerOrders();
-            fetchAdminNotifications();
+            renderAdminNotifications();
             renderClientOrders();
-            renderChatMessages();
+            // renderChatMessages(); // Removed old chat
         });
     </script>
 </body>

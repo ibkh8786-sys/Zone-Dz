@@ -1110,6 +1110,11 @@ tbody tr:hover {
     min-height: 220px;
 }
 
+.review-card.new-notif {
+    border-color: #58a6ff;
+    background: rgba(88, 166, 255, 0.08);
+}
+
 .product-card-content h3,
 .offer-card h3,
 .best-seller-card h4,
@@ -1356,22 +1361,80 @@ tbody tr:hover {
     margin-top: 40px;
 }
 
-/* Contact Us Section */
+/* Contact & Support Section */
+.contact-support-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-top: 40px;
+}
+
 .contact-form-container {
     background: #161b22;
-    padding: 60px;
-    border-radius: 25px;
-    max-width: 800px;
-    margin: 40px auto;
+    padding: 40px;
+    border-radius: 20px;
     border: 1px solid #30363d;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-    text-align: right; /* RTL */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.contact-form-container h3 {
+    color: #58a6ff;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
 }
 
 .contact-form-container p {
-    font-size: 1.1rem;
     color: #a0aec0;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.facebook-chat-btn,
+.whatsapp-chat-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    padding: 15px 26px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    margin-top: 15px;
+    width: 100%;
+}
+
+.whatsapp-chat-btn {
+    background: linear-gradient(90deg, #25d366, #128c7e);
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+    width: auto;
+    max-width: 310px;
+    margin-inline: auto;
+}
+
+.whatsapp-chat-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45);
+}
+
+.facebook-chat-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(24, 119, 242, 0.5);
+    background: linear-gradient(90deg, #0a66c2, #1877f2);
+}
+
+.whatsapp-icon {
+    font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+    .contact-support-wrapper {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
 }
 
 .success-msg {
