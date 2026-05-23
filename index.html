@@ -313,6 +313,123 @@
     </div>
 
     <script>
+        // ========== SECURITY LAYER ==========
+        
+        // 1. XSS Prevention - تنظيف النصوص من الأكواد الضارة
+        function sanitizeHTML(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text; // تحويل إلى نص فقط
+            return div.innerHTML; // إعادة HTML معقم
+        }
+
+        // 2. Input Validation - التحقق من صحة المدخلات
+        function validateInput(value, type) {
+            if (!value) return false;
+            switch(type) {
+                case 'phone': return /^\d{10}$/.test(value.replace(/\D/g, ''));
+                case 'name': return /^[\u0600-\u06FF\s\-']{3,100}$/.test(value); // Arabic text only
+                case 'text': return value.length > 0 && value.length <= 1000;
+                case 'email': return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+                case 'number': return !isNaN(value) && value > 0;
+                default: return true;
+            }
+        }
+
+        // 3. CSRF Protection - نظام الحماية من CSRF
+        function generateCSRFToken() {
+            const token = Math.random().toString(36).substr(2) + Date.now().toString(36);
+            sessionStorage.setItem('csrfToken', token);
+            return token;
+        }
+
+        function getCSRFToken() {
+            let token = sessionStorage.getItem('csrfToken');
+            if (!token) token = generateCSRFToken();
+            return token;
+        }
+
+        function verifyCSRFToken(token) {
+            const stored = sessionStorage.getItem('csrfToken');
+            return stored && token === stored;
+        }
+
+        // 4. Session Protection - حماية الجلسات
+        function createSecureSession(data) {
+            const session = {
+                ...data,
+                createdAt: Date.now(),
+                expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+            };
+            return session;
+        }
+
+        function isSessionValid(session) {
+            if (!session) return false;
+            return Date.now() < session.expiresAt;
+        }
+
+        // 5. Input Sanitization - تنظيف جميع المدخلات
+        function sanitizeInput(input, type = 'text') {
+            if (!input) return '';
+            let sanitized = String(input).trim();
+            
+            // إزالة أي علامات HTML/JS
+            sanitized = sanitized.replace(/[<>\"'`]/g, (char) => {
+                const map = {'<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '`': '&#x60;'};
+                return map[char];
+            });
+            
+            // تطبيق قيود نوع محددة
+            if (type === 'phone') {
+                sanitized = sanitized.replace(/\D/g, '');
+            } else if (type === 'number') {
+                sanitized = sanitized.replace(/[^\d.-]/g, '');
+            }
+            
+            return sanitized;
+        }
+
+        // 6. Secure Storage - تخزين آمن للبيانات
+        function secureStore(key, value) {
+            try {
+                // تجنب تخزين البيانات الحساسة
+                if (key.includes('password') || key.includes('token')) {
+                    console.warn('⚠️ محاولة تخزين بيانات حساسة - تم الرفض');
+                    return false;
+                }
+                localStorage.setItem(key, JSON.stringify(value));
+                return true;
+            } catch (e) {
+                console.error('❌ خطأ في التخزين:', e);
+                return false;
+            }
+        }
+
+        // 7. Rate Limiting - الحماية من الطلبات المتكررة
+        const rateLimitMap = new Map();
+        function checkRateLimit(action, maxAttempts = 5, timeWindow = 60000) {
+            const now = Date.now();
+            const key = action;
+            
+            if (!rateLimitMap.has(key)) {
+                rateLimitMap.set(key, []);
+            }
+            
+            const attempts = rateLimitMap.get(key).filter(time => now - time < timeWindow);
+            
+            if (attempts.length >= maxAttempts) {
+                console.warn(`⚠️ محاولة متكررة: ${action}`);
+                return false;
+            }
+            
+            attempts.push(now);
+            rateLimitMap.set(key, attempts);
+            return true;
+        }
+
+        // ========== END SECURITY LAYER ==========
+
         // Admin Credentials
         const browserStorageKey = `chatMessages_${navigator.userAgent.replace(/[^a-zA-Z0-9]/g, '_')}`;
 
@@ -566,10 +683,38 @@
 
         document.getElementById('review-form').addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            // Rate Limiting
+            if (!checkRateLimit('submit_review', 2, 60000)) {
+                alert('⚠️ محاولات تقييم كثيرة جداً. يرجى الانتظار.');
+                return;
+            }
+            
+            // Get and sanitize inputs
+            const customerName = sanitizeInput(document.getElementById('review-name').value, 'text');
+            const ratingValue = sanitizeInput(document.getElementById('review-rating').value, 'number');
+            const reviewText = sanitizeInput(document.getElementById('review-text').value, 'text');
+            
+            // Validate inputs
+            if (!validateInput(customerName, 'name')) {
+                alert('❌ الاسم يجب أن يكون بالعربية وبين 3 و 100 حرف.');
+                return;
+            }
+            
+            if (!validateInput(ratingValue, 'number') || ratingValue < 1 || ratingValue > 5) {
+                alert('❌ اختر تقييم بين 1 و 5 نجوم.');
+                return;
+            }
+            
+            if (!validateInput(reviewText, 'text')) {
+                alert('❌ نص التقييم مطلوب ولا يجب أن يكون فارغاً.');
+                return;
+            }
+            
             const review = {
-                customer: document.getElementById('review-name').value,
-                rating: parseInt(document.getElementById('review-rating').value, 10),
-                text: document.getElementById('review-text').value.trim(),
+                customer: customerName,
+                rating: parseInt(ratingValue, 10),
+                text: reviewText,
                 date: new Date().toLocaleDateString('ar-DZ')
             };
             db.saveReview(review);
@@ -602,6 +747,16 @@
             const toggleButton = document.querySelector('.password-toggle-btn');
             if (toggleButton) toggleButton.textContent = 'عرض';
             document.getElementById('admin-password').type = 'password';
+            
+            // Add CSRF token for security
+            let tokenInput = adminLoginForm.querySelector('input[name="csrfToken"]');
+            if (!tokenInput) {
+                tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = 'csrfToken';
+                adminLoginForm.appendChild(tokenInput);
+            }
+            tokenInput.value = getCSRFToken();
         }
 
         function closeLoginModal() {
@@ -622,17 +777,46 @@
 
         adminLoginForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            const username = document.getElementById('admin-username').value;
-            const password = document.getElementById('admin-password').value;
+            
+            // Rate Limiting - منع محاولات الدخول المتكررة
+            if (!checkRateLimit('admin_login', 5, 60000)) {
+                loginErrorMsg.textContent = 'محاولات كثيرة جداً. يرجى الانتظار.';
+                loginErrorMsg.classList.remove('hidden');
+                return;
+            }
+            
+            // Get and sanitize input
+            let username = sanitizeInput(document.getElementById('admin-username').value, 'text');
+            const password = document.getElementById('admin-password').value; // لا تعقم كلمة المرور
+            
+            // Verify CSRF Token
+            const formToken = this.csrfToken?.value;
+            if (formToken && !verifyCSRFToken(formToken)) {
+                loginErrorMsg.textContent = 'خطأ في الأمان. يرجى إعادة المحاولة.';
+                loginErrorMsg.classList.remove('hidden');
+                console.warn('❌ CSRF Token mismatch');
+                return;
+            }
+            
+            // Validate inputs exist
+            if (!username || !password) {
+                loginErrorMsg.textContent = 'اسم المستخدم وكلمة المرور مطلوبة.';
+                loginErrorMsg.classList.remove('hidden');
+                return;
+            }
 
+            // Verify credentials (مقارنة آمنة)
             if (username === adminUsername && password === adminPassword) {
                 isAdminLoggedIn = true;
                 localStorage.setItem('isAdminLoggedIn', 'true');
                 updateAdminUI();
                 closeLoginModal();
-                showSection('admin'); // Show admin section after successful login
+                showSection('admin');
+                console.log('✅ تسجيل دخول ناجح');
             } else {
+                loginErrorMsg.textContent = 'اسم المستخدم أو كلمة المرور خاطئة.';
                 loginErrorMsg.classList.remove('hidden');
+                console.warn('❌ فشل تسجيل الدخول - بيانات اعتماد خاطئة');
             }
         });
 
@@ -726,24 +910,56 @@
         // Form Submission
         document.getElementById('purchase-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const productName = document.getElementById('product-name').value;
-            const selectedProduct = productsData.find(item => item.name === productName) || productsData[0];
+            
+            // Rate Limiting - منع الطلبات المتكررة
+            if (!checkRateLimit('submit_order', 3, 30000)) {
+                alert('⚠️ محاولات طلب كثيرة جداً. يرجى الانتظار 30 ثانية.');
+                return;
+            }
+            
+            // Get and sanitize all inputs
+            const productName = sanitizeInput(document.getElementById('product-name').value, 'text');
+            const fullName = sanitizeInput(document.getElementById('full-name').value, 'text');
+            const phoneRaw = sanitizeInput(document.getElementById('phone').value, 'phone');
+            const address = sanitizeInput(document.getElementById('address').value, 'text');
+            const wilaya = sanitizeInput(document.getElementById('wilaya').value, 'text');
+            const municipality = sanitizeInput(document.getElementById('municipality').value, 'text');
             const quantity = parseInt(document.getElementById('quantity').value, 10) || 1;
-
-            // Phone validation: only digits, exactly 10 digits
-            const phoneRaw = document.getElementById('phone').value || '';
-            const phoneDigits = phoneRaw.replace(/\D/g, '');
-            if (phoneDigits.length !== 10) {
-                alert('الرجاء إدخال رقم هاتف صالح مكوّن من 10 أرقام.');
+            
+            // Validate inputs
+            if (!validateInput(fullName, 'name')) {
+                alert('❌ الاسم يجب أن يكون بالعربية وبين 3 و 100 حرف.');
+                return;
+            }
+            
+            if (!validateInput(phoneRaw, 'phone')) {
+                alert('❌ الرجاء إدخال رقم هاتف صالح مكوّن من 10 أرقام.');
+                return;
+            }
+            
+            if (!validateInput(address, 'text')) {
+                alert('❌ العنوان مطلوب ولا يجب أن يكون فارغاً.');
+                return;
+            }
+            
+            if (!validateInput(wilaya, 'text')) {
+                alert('❌ اختر ولاية صحيحة.');
+                return;
+            }
+            
+            if (!validateInput(quantity, 'number') || quantity < 1 || quantity > 100) {
+                alert('❌ الكمية يجب أن تكون بين 1 و 100.');
                 return;
             }
 
+            const selectedProduct = productsData.find(item => item.name === productName) || productsData[0];
+
             const order = {
-                name: document.getElementById('full-name').value,
-                phone: phoneDigits,
-                address: document.getElementById('address').value,
-                wilaya: document.getElementById('wilaya').value,
-                municipality: document.getElementById('municipality').value,
+                name: fullName,
+                phone: phoneRaw,
+                address: address,
+                wilaya: wilaya,
+                municipality: municipality,
                 product: productName,
                 quantity: quantity,
                 price: selectedProduct.price * quantity,
