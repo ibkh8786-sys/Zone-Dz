@@ -177,13 +177,13 @@
                     <span>عدد الزوار</span>
                     <strong id="visitor-count">0</strong>
                 </div>
-                <div class="stat-card">
-                    <span>طلبات معلقة</span>
-                    <strong id="pending-orders-count">0</strong>
+                <div class="stat-card" style="background:#ffebee;border:2px solid #d32f2f;">
+                    <span>🚨 طلبات معلقة</span>
+                    <strong id="pending-orders-count" style="font-size:1.8em;color:#d32f2f;">0</strong>
                 </div>
-                <div class="stat-card">
-                    <span>إشعارات جديدة</span>
-                    <strong id="admin-notif-count">0</strong>
+                <div class="stat-card" style="background:#fff3e0;border:2px solid #f57c00;">
+                    <span>🔔 إشعارات جديدة</span>
+                    <strong id="admin-notif-count" style="font-size:1.8em;color:#f57c00;">0</strong>
                 </div>
             </div>
             <div class="admin-notifications" style="margin-top:18px;background:#f0f0f0;padding:16px;border-radius:8px;border:2px solid #58a6ff;">
@@ -191,23 +191,6 @@
                 <div id="admin-notifications-list" class="reviews-grid">
                     <p class="empty-msg">لا توجد إشعارات حالياً.</p>
                 </div>
-            </div>
-            <div class="admin-table-container">
-                <table id="admin-orders-table">
-                    <thead>
-                        <tr>
-                            <th>الزبون</th>
-                            <th>الهاتف</th>
-                            <th>المنتج</th>
-                            <th>الكمية</th>
-                            <th>الحالة</th>
-                            <th>إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- سيتم ملؤه بواسطة JS -->
-                    </tbody>
-                </table>
             </div>
             <div class="admin-reviews-container" style="margin-top:25px;">
                 <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">الرسائل المعلقة (الطلبيات)</h3>
@@ -856,9 +839,7 @@
         }
 
         function renderAdminOrders() {
-            const tbody = document.querySelector('#admin-orders-table tbody');
             const orders = db.getOrders();
-            markOrdersAsSeen();
             
             const totalOrdersEl = document.getElementById('total-orders');
             const totalSalesEl = document.getElementById('total-sales');
@@ -873,22 +854,6 @@
             renderAdminReviews();
             renderAdminNotifications();
             renderPendingMessages();
-
-            if (tbody) {
-                tbody.innerHTML = orders.map(o => `
-                    <tr>
-                        <td>${o.name}</td>
-                        <td>${o.phone}</td>
-                        <td>${o.product}</td>
-                        <td>${o.quantity}</td>
-                        <td><span class="status-${o.status === 'تم الشحن' ? 'success' : o.status === 'ملغي' ? 'danger' : 'pending'}">${o.status}</span></td>
-                        <td>
-                            <button onclick="db.updateStatus(${o.id}, 'تم الشحن')" class="btn-small">شحن</button>
-                            <button onclick="db.updateStatus(${o.id}, 'ملغي')" class="btn-small danger">إلغاء</button>
-                        </td>
-                    </tr>
-                `).join('');
-            }
         }
 
         // External notification helpers (Facebook only)
@@ -995,8 +960,8 @@
                 return;
             }
             container.innerHTML = notifications.map(n => `
-                <div class="review-card ${n.newNotification ? 'new-notif' : ''}">
-                    <h4>${n.title}</h4>
+                <div class="review-card ${n.newNotification ? 'new-notif' : ''}" style="${n.newNotification ? 'background:#fff3e0;border:3px solid #f57c00;' : ''}">
+                    <h4>${n.newNotification ? '🔔 ' : ''}<strong>${n.title}</strong></h4>
                     <p>${n.text}</p>
                     <span>${n.date}</span>
                     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
