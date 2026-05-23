@@ -46,7 +46,7 @@
                 <h2>مرحبا بك في متجر Zone DZ</h2>
                 <p>المتجر الرسمي لـ Zone DZ مرحبا</p>
                 <p>تصفح مجموعتنا واطلب منتجاتك عبر صفحة الطلبات المخصصة.</p>
-                <button class="btn" onclick="showSection('order')">طلب المنتجات</button>
+                <button class="btn" onclick="openLoginModal()" style="margin-top:10px;background:#58a6ff;font-size:24px;">🔐</button>
             </div>
         </section>
 
@@ -168,33 +168,24 @@
                     <strong id="total-orders">0</strong>
                 </div>
                 <div class="stat-card">
-                    <span>إجمالي المبيعات</span>
-                    <strong id="total-sales">0</strong>
-                    <span>دج</span>
-                </div>
-                <div class="stat-card">
                     <span>عدد الزوار</span>
                     <strong id="visitor-count">0</strong>
                 </div>
-                <div class="stat-card" style="background:#ffebee;border:2px solid #d32f2f;">
+                <div class="stat-card" style="background:#ffebee;border:2px solid #d32f2f;cursor:pointer;" onclick="scrollToPendingOrders()">
                     <span>🚨 طلبات معلقة</span>
                     <strong id="pending-orders-count" style="font-size:1.8em;color:#d32f2f;">0</strong>
+                    <p style="margin-top:8px;font-size:0.85em;color:#d32f2f;">اضغط للانتقال</p>
                 </div>
-                <div class="stat-card" style="background:#fff3e0;border:2px solid #f57c00;">
+                <div class="stat-card" style="background:#fff3e0;border:2px solid #f57c00;cursor:pointer;" onclick="scrollToNotifications()">
                     <span>🔔 إشعارات جديدة</span>
                     <strong id="admin-notif-count" style="font-size:1.8em;color:#f57c00;">0</strong>
+                    <p style="margin-top:8px;font-size:0.85em;color:#f57c00;">اضغط للانتقال</p>
                 </div>
             </div>
             <div class="admin-notifications" style="margin-top:18px;background:#f0f0f0;padding:16px;border-radius:8px;border:2px solid #58a6ff;">
                 <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">🔔 طابور الإشعارات</h3>
                 <div id="admin-notifications-list" class="reviews-grid">
                     <p class="empty-msg">لا توجد إشعارات حالياً.</p>
-                </div>
-            </div>
-            <div class="admin-reviews-container" style="margin-top:25px;">
-                <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">الرسائل المعلقة (الطلبيات)</h3>
-                <div id="pending-messages-list" class="reviews-grid">
-                    <p class="empty-msg">لا توجد رسائل معلقة.</p>
                 </div>
             </div>
             <div class="admin-reviews-container" style="margin-top:25px;">
@@ -819,11 +810,9 @@
             const orders = db.getOrders();
             
             const totalOrdersEl = document.getElementById('total-orders');
-            const totalSalesEl = document.getElementById('total-sales');
             const pendingOrdersEl = document.getElementById('pending-orders-count');
             
             if (totalOrdersEl) totalOrdersEl.textContent = orders.length;
-            if (totalSalesEl) totalSalesEl.textContent = orders.reduce((acc, curr) => acc + (curr.status === 'تم الشحن' ? curr.price : 0), 0);
             if (pendingOrdersEl) pendingOrdersEl.textContent = orders.filter(o => o.status === 'قيد الانتظار').length;
             
             updateVisitorCount();
@@ -832,23 +821,11 @@
             renderAdminNotifications();
         }
 
-        // External notification helpers (Facebook only)
+        // External notification helpers - orders saved to admin only, no WhatsApp to customer
         async function triggerExternalNotifications(order) {
             if (!order) return;
-            const contacts = getAdminContacts();
-            const whatsappLink = contacts.whatsapp || defaultAdminContacts.whatsapp || 'https://wa.me/213697596402';
-            
-            const messageText = encodeURIComponent(
-                `🚨 طلب جديد\n\nالعميل: ${order.name}\nالهاتف: ${order.phone}\nالولاية: ${order.wilaya}${order.municipality ? ' - ' + order.municipality : ''}\nالمنتج: ${order.product}\nالكمية: ${order.quantity}\nالسعر: ${order.price} دج`
-            );
-            
-            const finalWhatsappLink = whatsappLink.includes('?') ? 
-                `${whatsappLink}&text=${messageText}` : 
-                `${whatsappLink}?text=${messageText}`;
-            
-            // فتح الرابط بنافذة جديدة
-            window.open(finalWhatsappLink, '_blank');
-            console.log('تم إرسال الطلب عبر الواتساب');
+            // تم حفظ الطلب في لوحة الأدمن فقط، لا يتم الإرسال للعميل على الواتساب
+            console.log('تم حفظ الطلب في لوحة الأدمن');
         }
 
         // Admin contacts helper (stored in localStorage under 'adminContacts')
@@ -900,28 +877,77 @@
             const container = document.getElementById('admin-notifications-list');
             const countEl = document.getElementById('admin-notif-count');
             if (!container) return;
+            
+            // عرض الطلبات المعلقة أولاً
+            const orders = db.getOrders();
+            const pendingOrders = orders.filter(o => o.status === 'قيد الانتظار');
+            
             const notifications = db.getNotifications();
             const newCount = notifications.filter(n => n.newNotification).length;
             if (countEl) countEl.textContent = newCount;
-            if (!notifications.length) {
+            
+            let html = '';
+            
+            // عرض الطلبات المعلقة
+            if (pendingOrders.length > 0) {
+                html += `<div style="background:#ffebee;padding:12px;border-radius:6px;margin-bottom:12px;border:2px solid #d32f2f;">
+                    <h4 style="color:#d32f2f;margin:0 0 10px 0;">🚨 طلبات معلقة (${pendingOrders.length})</h4>`;
+                pendingOrders.forEach(o => {
+                    html += `<div style="background:white;padding:8px;margin:5px 0;border-radius:4px;text-align:right;">
+                        <p style="margin:3px 0;"><strong>${o.name}</strong> - ${o.product}</p>
+                        <p style="margin:3px 0;font-size:0.9em;color:#666;">الهاتف: ${o.phone} | الولاية: ${o.wilaya}</p>
+                        <p style="margin:3px 0;font-size:0.9em;color:#666;">الكمية: ${o.quantity} | السعر: ${o.price} دج</p>
+                    </div>`;
+                });
+                html += `</div>`;
+            }
+            
+            // عرض الإشعارات (تبقى جميعها مرئية)
+            if (notifications.length === 0 && pendingOrders.length === 0) {
                 container.innerHTML = '<p class="empty-msg">لا توجد إشعارات حالياً.</p>';
                 return;
             }
-            container.innerHTML = notifications.map(n => `
+            
+            html += notifications.map(n => `
                 <div class="review-card ${n.newNotification ? 'new-notif' : ''}" style="${n.newNotification ? 'background:#fff3e0;border:3px solid #f57c00;' : ''}">
                     <h4>${n.newNotification ? '🔔 ' : ''}<strong>${n.title}</strong></h4>
                     <p>${n.text}</p>
                     <span>${n.date}</span>
                     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
-                        ${n.newNotification ? `<button class="btn-small" onclick="markNotificationRead(${n.id})">وضع كمقروء</button>` : ''}
+                        ${n.newNotification ? `<button class="btn-small" onclick="goToNotificationAndMark(${n.id})">اذهب و وضع كمقروء</button>` : ''}
                     </div>
                 </div>
             `).join('');
+            
+            container.innerHTML = html;
+        }
+
+        function goToNotificationAndMark(id) {
+            db.markNotificationRead(id);
+            renderAdminNotifications();
+            // الانتقال لأسفل قائمة الإشعارات
+            setTimeout(() => {
+                document.getElementById('admin-notifications-list').scrollIntoView({ behavior: 'smooth' });
+            }, 100);
         }
 
         function markNotificationRead(id) {
             db.markNotificationRead(id);
             renderAdminNotifications();
+        }
+
+        function scrollToPendingOrders() {
+            // الانتقال لقسم الطلبات المعلقة في الإشعارات
+            setTimeout(() => {
+                document.getElementById('admin-notifications-list').scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
+
+        function scrollToNotifications() {
+            // الانتقال لقسم الإشعارات
+            setTimeout(() => {
+                document.getElementById('admin-notifications-list').scrollIntoView({ behavior: 'smooth' });
+            }, 100);
         }
 
         // Admin notifications and reviews
@@ -1063,7 +1089,12 @@
             incrementVisitorCount();
             ensureDefaultAdminContacts();
             updateAdminUI(); // Set initial visibility for admin elements
-            showSection('home');
+            // If admin is logged in, show admin section, otherwise show home
+            if (isAdminLoggedIn) {
+                showSection('admin');
+            } else {
+                showSection('home');
+            }
             prepareOrderForm();
             updateWhatsAppLink();
             renderAdminOrders();
