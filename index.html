@@ -113,12 +113,14 @@
                             <option value="سوق أهراس">سوق أهراس</option>
                             <option value="تيبازة">تيبازة</option>
                             <option value="ميلة">ميلة</option>
-                            <option value="عين الدفلى">عين الدفلى</option>
-                            <option value="النعامة">النعامة</option>
                             <option value="عين تموشنت">عين تموشنت</option>
                             <option value="غرداية">غرداية</option>
                             <option value="غليزان">غليزان</option>
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="municipality">الدائرة أو البلدية:</label>
+                        <input type="text" id="municipality" name="municipality" placeholder="الدائرة أو البلدية" required>
                     </div>
                     <div class="form-group">
                         <label for="product-name">المنتج المطلوب:</label>
@@ -139,7 +141,10 @@
 
         <!-- Client Orders Section -->
         <section id="my-orders-section" class="app-section">
-            <h2>طلباتي السابقة</h2>
+            <h2>طلباتي</h2>
+            <div id="my-orders-note" class="order-note hidden" style="text-align:right;margin-bottom:16px;padding:14px;border:1px solid #f8c0c0;background:#fff4f4;color:#8a2b2b;border-radius:8px;">
+                إذا لم يُحذف الطلب، فقط قم بتحديث الصفحة.
+            </div>
             <div id="client-orders-list" class="orders-grid">
                 <p class="empty-msg">ليس لديك طلبات حالياً.</p>
             </div>
@@ -283,7 +288,7 @@
             <div class="contact-support-wrapper">
                 <div class="contact-form-container">
                     <h3>واتساب الخاص بنا</h3>
-                    <p>للتواصل السريع والأسئلة حول الطلبات، أرسل رسالة عبر واتساب.</p>
+                    <p>للتواصل السريع والأسئلة، أرسل رسالة عبر واتساب.</p>
                     <a id="whatsapp-link" href="https://wa.me/213697596402" target="_blank" class="btn whatsapp-chat-btn">
                         <span class="whatsapp-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" width="22" height="22" fill="white" xmlns="http://www.w3.org/2000/svg">
@@ -721,6 +726,9 @@
                 reviews.push({ id: Date.now(), ...review });
                 localStorage.setItem('customerReviews', JSON.stringify(reviews));
             },
+            clearReviews: () => {
+                localStorage.removeItem('customerReviews');
+            },
             getNotifications: () => JSON.parse(localStorage.getItem('adminNotifications') || '[]'),
             saveNotification: (notification) => {
                 const notifications = db.getNotifications();
@@ -778,6 +786,7 @@
                 phone: phoneDigits,
                 address: document.getElementById('address').value,
                 wilaya: document.getElementById('wilaya').value,
+                municipality: document.getElementById('municipality').value,
                 product: productName,
                 quantity: quantity,
                 price: selectedProduct.price * quantity,
@@ -798,6 +807,10 @@
         function renderClientOrders() {
             const list = document.getElementById('client-orders-list');
             const orders = db.getOrders();
+            const note = document.getElementById('my-orders-note');
+            if (note) {
+                note.classList.toggle('hidden', orders.length === 0);
+            }
             if (orders.length === 0) {
                 list.innerHTML = '<p class="empty-msg">ليس لديك طلبات حالياً.</p>';
                 return;
@@ -805,6 +818,7 @@
             list.innerHTML = orders.map(o => `
                 <div class="order-card">
                     <h4>${o.product}</h4>
+                    <p>الولاية: ${o.wilaya}${o.municipality ? '، ' + o.municipality : ''}</p>
                     <p>الحالة: <span class="status-${o.status === 'تم الشحن' ? 'success' : o.status === 'ملغي' ? 'danger' : 'pending'}">${o.status}</span></p>
                     <p>التاريخ: ${o.date}</p>
                     <p>الإجمالي: ${o.price} دج</p>
@@ -822,7 +836,7 @@
             const confirmed = confirm('هل أنت متأكد أنك تريد إلغاء هذا الطلب؟');
             if (!confirmed) return;
             db.updateStatus(id, 'ملغي');
-            addAdminNotification('order', 'طلب ملغي', `العميل: ${order.name} • الهاتف: ${order.phone} • المنتج: ${order.product}`);
+            addAdminNotification('order', 'طلب ملغي', `العميل: ${order.name} • الهاتف: ${order.phone} • المنتج: ${order.product} • الولاية: ${order.wilaya}${order.municipality ? ' • ' + order.municipality : ''}`);
             renderClientOrders();
             renderAdminOrders();
         }
@@ -874,18 +888,20 @@
         async function triggerExternalNotifications(order) {
             if (!order) return;
             const contacts = getAdminContacts();
-            const facebookLink = normalizeFacebookMessengerLink(contacts.facebook || defaultAdminContacts.facebook);
+            let facebookLink = normalizeFacebookMessengerLink(contacts.facebook || defaultAdminContacts.facebook);
             
             const message = encodeURIComponent(
-                    `طلب جديد:\n\nالعميل: ${order.name}\nالهاتف: ${order.phone}\nالولاية: ${order.wilaya}\nالمنتج: ${order.product}\nالكمية: ${order.quantity}\nالسعر: ${order.price} دج\nالعنوان: ${order.address}`
+                    `طلب جديد:\n\nالعميل: ${order.name}\nالهاتف: ${order.phone}\nالولاية: ${order.wilaya}${order.municipality ? ' • ' + order.municipality : ''}\nالمنتج: ${order.product}\nالكمية: ${order.quantity}\nالسعر: ${order.price} دج\nالعنوان: ${order.address}`
             );
 
             if (facebookLink.includes('m.me')) {
-                window.open(`${facebookLink}?text=${message}`, '_blank');
-            } else {
-                window.open(facebookLink, '_blank');
+                facebookLink += facebookLink.includes('?') ? `&text=${message}` : `?text=${message}`;
+            } else if (facebookLink.includes('facebook.com')) {
+                facebookLink = normalizeFacebookMessengerLink(facebookLink);
+                facebookLink += facebookLink.includes('?') ? `&text=${message}` : `?text=${message}`;
             }
             
+            window.open(facebookLink, '_blank');
             console.log('تم إرسال الطلب إلى فيسبوك');
         }
 
@@ -1091,8 +1107,38 @@
                     <div class="rating-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
                     <p>"${r.text}"</p>
                     <span>— ${r.customer} • ${r.date || ''}</span>
+                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+                        <button class="btn-small danger" onclick="deleteReview(${r.id})">حذف</button>
+                        <button class="btn-small" onclick="editReview(${r.id})">تعديل</button>
+                    </div>
                 </div>
             `).join('');
+        }
+
+        function deleteReview(id) {
+            const confirmed = confirm('هل أنت متأكد أنك تريد حذف هذا التقييم؟');
+            if (!confirmed) return;
+            const reviews = db.getReviews();
+            const updated = reviews.filter(r => r.id !== id);
+            localStorage.setItem('customerReviews', JSON.stringify(updated));
+            renderAdminReviews();
+            renderCustomerReviews();
+            alert('تم حذف التقييم بنجاح.');
+        }
+
+        function editReview(id) {
+            const reviews = db.getReviews();
+            const review = reviews.find(r => r.id === id);
+            if (!review) return alert('التقييم غير موجود.');
+
+            const newText = prompt('عدّل التقييم:', review.text);
+            if (newText === null) return; // المستخدم ألغى العملية
+            
+            review.text = newText.trim();
+            localStorage.setItem('customerReviews', JSON.stringify(reviews));
+            renderAdminReviews();
+            renderCustomerReviews();
+            alert('تم تحديث التقييم بنجاح.');
         }
 
         // Initial Render
@@ -1108,6 +1154,7 @@
             syncServerOrders();
             renderAdminNotifications();
             renderClientOrders();
+            renderCustomerReviews();
             // renderChatMessages(); // Removed old chat
         });
     </script>
