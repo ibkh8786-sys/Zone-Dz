@@ -21,7 +21,7 @@
                 <li><a href="javascript:void(0)" onclick="showSection('customer-reviews')">تقييمات الزبائن</a></li>
                 <li><a href="javascript:void(0)" onclick="showSection('contact-support')">تواصل</a></li>
                 <li><a href="javascript:void(0)" onclick="showSection('my-orders')">طلباتي</a></li>
-                <li><a href="javascript:void(0)" onclick="showSection('admin')" class="admin-link">لوحة التحكم <span id="admin-badge" class="admin-badge hidden">0</span></a></li>
+                <li><a href="javascript:void(0)" onclick="showSection('admin')" class="admin-link" style="display:none;">لوحة التحكم <span id="admin-badge" class="admin-badge hidden">0</span></a></li>
             </ul>
         </div>
     </nav>
@@ -158,7 +158,6 @@
             <div class="admin-actions">
                 <button id="admin-login-btn" class="btn btn-small admin-action-btn" onclick="openLoginModal()">دخول الأدمن</button>
                 <button id="admin-logout-btn" class="btn btn-small danger admin-action-btn hidden" onclick="logoutAdmin()">تسجيل الخروج</button>
-                <button id="admin-settings-btn" class="btn btn-small admin-action-btn hidden" onclick="openAdminSettings()">إعدادات الإشعارات</button>
             </div>
             <div class="admin-welcome">
                 <p>مرحباً بك في واجهة الإدارة. يمكنك متابعة الطلبات وتحديث حالتها بسهولة، مع إبقاء الجلسة نشطة حتى تسجيل الخروج.</p>
@@ -202,25 +201,6 @@
                 <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">تقييمات الزبائن</h3>
                 <div id="admin-reviews-list" class="reviews-grid">
                     <p class="empty-msg">لا توجد تقييمات حتى الآن.</p>
-                </div>
-            </div>
-            <div id="admin-settings-panel" class="admin-settings-panel hidden" style="margin-top:20px;">
-                <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">إعدادات الإشعارات (للإدارة فقط)</h3>
-                <div class="form-group">
-                    <label for="settings-email">البريد الإلكتروني للأدمن:</label>
-                    <input type="email" id="settings-email" placeholder="you@example.com">
-                </div>
-                <div class="form-group">
-                    <label for="settings-whatsapp">واتساب الأدمن (رابط wa.me):</label>
-                    <input type="text" id="settings-whatsapp" placeholder="https://wa.me/رقم_كامل">
-                </div>
-                <div class="form-group">
-                    <label for="settings-facebook">محادثة فيسبوك (رابط Messenger m.me):</label>
-                    <input type="text" id="settings-facebook" placeholder="https://m.me/yourpageid أو اسم صفحتك">
-                </div>
-                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
-                    <button class="btn" onclick="saveAdminSettings()">حفظ</button>
-                    <button class="btn btn-small danger" onclick="closeAdminSettings()">إلغاء</button>
                 </div>
             </div>
         </section>
@@ -620,7 +600,6 @@
         const adminLogoutBtn = document.getElementById('admin-logout-btn');
         const adminLink = document.querySelector('.admin-link');
         const adminBadge = document.getElementById('admin-badge');
-        const adminSettingsBtn = document.getElementById('admin-settings-btn');
         const adminSection = document.getElementById('admin-section');
 
 
@@ -678,13 +657,11 @@
                 adminLink.style.display = 'block'; // Make admin link visible if it was hidden
                 adminLoginBtn.classList.add('hidden');
                 adminLogoutBtn.classList.remove('hidden');
-                if (adminSettingsBtn) adminSettingsBtn.classList.remove('hidden');
                 // Ensure admin section itself is visible if an admin is logged in and navigates there
             } else {
-                // adminLink.style.display = 'none'; // Only hide if we want to remove access completely from nav for non-admins
+                adminLink.style.display = 'none'; // Hide admin link when not logged in
                 adminLoginBtn.classList.remove('hidden');
                 adminLogoutBtn.classList.add('hidden');
-                if (adminSettingsBtn) adminSettingsBtn.classList.add('hidden');
                 adminSection.classList.remove('active'); // Hide admin section if user logs out or is not admin
             }
             // Keep badge in sync
@@ -853,25 +830,25 @@
             updateAdminBadge();
             renderAdminReviews();
             renderAdminNotifications();
-            renderPendingMessages();
         }
 
         // External notification helpers (Facebook only)
         async function triggerExternalNotifications(order) {
             if (!order) return;
-            const messageText = `طلب جديد:\n\nالعميل: ${order.name}\nالهاتف: ${order.phone}\nالولاية: ${order.wilaya}${order.municipality ? ' • ' + order.municipality : ''}\nالمنتج: ${order.product}\nالكمية: ${order.quantity}\nالسعر: ${order.price} دج\nالعنوان: ${order.address}`;
+            const contacts = getAdminContacts();
+            const whatsappLink = contacts.whatsapp || defaultAdminContacts.whatsapp || 'https://wa.me/213697596402';
             
-            // حفظ الطلب في الرسائل المعلقة (Pending Messages)
-            const messages = JSON.parse(localStorage.getItem('pendingOrderMessages') || '[]');
-            messages.push({
-                id: Date.now(),
-                order: order,
-                message: messageText,
-                date: new Date().toLocaleString('ar-DZ'),
-                status: 'معلق'
-            });
-            localStorage.setItem('pendingOrderMessages', JSON.stringify(messages));
-            console.log('تم حفظ الطلب في الرسائل المعلقة');
+            const messageText = encodeURIComponent(
+                `🚨 طلب جديد\n\nالعميل: ${order.name}\nالهاتف: ${order.phone}\nالولاية: ${order.wilaya}${order.municipality ? ' - ' + order.municipality : ''}\nالمنتج: ${order.product}\nالكمية: ${order.quantity}\nالسعر: ${order.price} دج`
+            );
+            
+            const finalWhatsappLink = whatsappLink.includes('?') ? 
+                `${whatsappLink}&text=${messageText}` : 
+                `${whatsappLink}?text=${messageText}`;
+            
+            // فتح الرابط بنافذة جديدة
+            window.open(finalWhatsappLink, '_blank');
+            console.log('تم إرسال الطلب عبر الواتساب');
         }
 
         // Admin contacts helper (stored in localStorage under 'adminContacts')
@@ -911,35 +888,6 @@
                 return `https://m.me/${trimmed}`;
             }
             return trimmed;
-        }
-
-        function loadAdminSettings() {
-            const c = getAdminContacts();
-            document.getElementById('settings-email').value = c.email || '';
-            document.getElementById('settings-whatsapp').value = c.whatsapp || '';
-            document.getElementById('settings-facebook').value = c.facebook || '';
-        }
-
-        function openAdminSettings() {
-            if (!isAdminLoggedIn) return openLoginModal();
-            loadAdminSettings();
-            document.getElementById('admin-settings-panel').classList.remove('hidden');
-            document.getElementById('admin-settings-panel').scrollIntoView({behavior:'smooth'});
-        }
-
-        function closeAdminSettings() {
-            document.getElementById('admin-settings-panel').classList.add('hidden');
-        }
-
-        function saveAdminSettings() {
-            const email = document.getElementById('settings-email').value.trim();
-            const whatsapp = document.getElementById('settings-whatsapp').value.trim();
-            const facebook = document.getElementById('settings-facebook').value.trim();
-            const payload = { email, whatsapp, facebook };
-            localStorage.setItem('adminContacts', JSON.stringify(payload));
-            closeAdminSettings();
-            updateWhatsAppLink();
-            alert('تم حفظ إعدادات الإشعارات.');
         }
 
         function addAdminNotification(type, title, text) {
@@ -1108,65 +1056,6 @@
             renderAdminReviews();
             renderCustomerReviews();
             alert('تم تحديث التقييم بنجاح.');
-        }
-
-        function renderPendingMessages() {
-            const container = document.getElementById('pending-messages-list');
-            if (!container) return;
-            const messages = JSON.parse(localStorage.getItem('pendingOrderMessages') || '[]');
-            if (!messages.length) {
-                container.innerHTML = '<p class="empty-msg">لا توجد رسائل معلقة.</p>';
-                return;
-            }
-            container.innerHTML = messages.map(msg => `
-                <div class="review-card">
-                    <h4>${msg.order.name} - ${msg.order.product}</h4>
-                    <p style="white-space:pre-wrap;font-family:monospace;font-size:0.9em;background:#f5f5f5;padding:10px;border-radius:5px;text-align:right;">${msg.message}</p>
-                    <span>${msg.date}</span>
-                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
-                        <button class="btn-small danger" onclick="deletePendingMessage(${msg.id})">حذف</button>
-                        <button class="btn-small" onclick="sendMessageToMessenger(${msg.id})">إرسال إلى Messenger</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function deletePendingMessage(id) {
-            const confirmed = confirm('هل تريد حذف هذه الرسالة؟');
-            if (!confirmed) return;
-            let messages = JSON.parse(localStorage.getItem('pendingOrderMessages') || '[]');
-            messages = messages.filter(m => m.id !== id);
-            localStorage.setItem('pendingOrderMessages', JSON.stringify(messages));
-            renderPendingMessages();
-        }
-
-        function sendMessageToMessenger(id) {
-            const messages = JSON.parse(localStorage.getItem('pendingOrderMessages') || '[]');
-            const msg = messages.find(m => m.id === id);
-            if (!msg) return alert('الرسالة غير موجودة.');
-            
-            const contacts = getAdminContacts();
-            let facebookLink = normalizeFacebookMessengerLink(contacts.facebook || defaultAdminContacts.facebook);
-            const encodedMessage = encodeURIComponent(msg.message);
-            
-            if (facebookLink.includes('m.me')) {
-                facebookLink += facebookLink.includes('?') ? `&text=${encodedMessage}` : `?text=${encodedMessage}`;
-            } else if (facebookLink.includes('facebook.com')) {
-                facebookLink = normalizeFacebookMessengerLink(facebookLink);
-                facebookLink += facebookLink.includes('?') ? `&text=${encodedMessage}` : `?text=${encodedMessage}`;
-            }
-            
-            // حفظ الرسالة كـ مرسلة
-            const msgIndex = messages.findIndex(m => m.id === id);
-            if (msgIndex !== -1) {
-                messages[msgIndex].status = 'مرسل';
-                localStorage.setItem('pendingOrderMessages', JSON.stringify(messages));
-                renderPendingMessages();
-            }
-            
-            // فتح الرابط مباشرة
-            window.open(facebookLink, '_blank');
-            alert('تم إرسال الرسالة إلى Messenger بنجاح!');
         }
 
         // Initial Render
