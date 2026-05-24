@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zone DZ</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin-styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
@@ -171,23 +172,34 @@
                     <span>عدد الزوار</span>
                     <strong id="visitor-count">0</strong>
                 </div>
-                <div class="stat-card" style="background:#ffebee;border:2px solid #d32f2f;cursor:pointer;" onclick="scrollToPendingOrders()">
-                    <span>🚨 طلبات معلقة</span>
-                    <strong id="pending-orders-count" style="font-size:1.8em;color:#d32f2f;">0</strong>
-                    <p style="margin-top:8px;font-size:0.85em;color:#d32f2f;">اضغط للانتقال</p>
-                </div>
-                <div class="stat-card" style="background:#fff3e0;border:2px solid #f57c00;cursor:pointer;" onclick="scrollToNotifications()">
-                    <span>🔔 إشعارات جديدة</span>
-                    <strong id="admin-notif-count" style="font-size:1.8em;color:#f57c00;">0</strong>
-                    <p style="margin-top:8px;font-size:0.85em;color:#f57c00;">اضغط للانتقال</p>
+            </div>
+            <!-- New Order Management Section -->
+            <div class="admin-orders-management" style="margin-top:25px;background:#f0f0f0;padding:16px;border-radius:8px;border:2px solid #58a6ff;">
+                <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">إدارة الطلبات</h3>
+                <div class="orders-table-container" style="max-height: 600px; overflow-y: auto;">
+                    <table class="admin-orders-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>العميل</th>
+                                <th>المنتج</th>
+                                <th>الكمية</th>
+                                <th>السعر</th>
+                                <th>الهاتف</th>
+                                <th>الولاية</th>
+                                <th>الحالة</th>
+                                <th>التاريخ</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-orders-table-body">
+                            <!-- Orders will be loaded here by JS -->
+                            <tr><td colspan="10" class="empty-msg">لا توجد طلبات حتى الآن.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <div class="admin-notifications" style="margin-top:18px;background:#f0f0f0;padding:16px;border-radius:8px;border:2px solid #58a6ff;">
-                <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">🔔 طابور الإشعارات</h3>
-                <div id="admin-notifications-list" class="reviews-grid">
-                    <p class="empty-msg">لا توجد إشعارات حالياً.</p>
-                </div>
-            </div>
+            <!-- End of New Order Management Section -->
             <div class="admin-reviews-container" style="margin-top:25px;">
                 <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">تقييمات الزبائن</h3>
                 <div id="admin-reviews-list" class="reviews-grid">
@@ -328,7 +340,7 @@
             if (!value) return false;
             switch(type) {
                 case 'phone': return /^\d{10}$/.test(value.replace(/\D/g, ''));
-                case 'name': return /^[\u0600-\u06FF\s\-']{3,100}$/.test(value); // Arabic text only
+                case 'name': return value.length >= 3 && value.length <= 100; // Accept any language
                 case 'text': return value.length > 0 && value.length <= 1000;
                 case 'email': return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
                 case 'number': return !isNaN(value) && value > 0;
@@ -483,6 +495,8 @@
                 if (isAdminLoggedIn) {
                     document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
                     document.getElementById('admin-section').classList.add('active');
+                    // Mark all notifications as read when entering admin panel
+                    markAllNotificationsAsRead();
                     renderAdminOrders();
                 } else {
                     openLoginModal();
@@ -697,7 +711,7 @@
             
             // Validate inputs
             if (!validateInput(customerName, 'name')) {
-                alert('❌ الاسم يجب أن يكون بالعربية وبين 3 و 100 حرف.');
+                alert('❌ الاسم يجب أن يكون بين 3 و 100 حرف.');
                 return;
             }
             
@@ -928,7 +942,7 @@
             
             // Validate inputs
             if (!validateInput(fullName, 'name')) {
-                alert('❌ الاسم يجب أن يكون بالعربية وبين 3 و 100 حرف.');
+                alert('❌ الاسم يجب أن يكون بين 3 و 100 حرف.');
                 return;
             }
             
@@ -1010,6 +1024,7 @@
             if (!confirmed) return;
             db.updateStatus(id, 'ملغي');
             addAdminNotification('order', 'طلب ملغي', `العميل: ${order.name} • الهاتف: ${order.phone} • المنتج: ${order.product} • الولاية: ${order.wilaya}${order.municipality ? ' • ' + order.municipality : ''}`);
+            alert('✅ تم إلغاء الطلب بنجاح.\n\nإذا لم يتم تحديث الصفحة تلقائياً، يرجى تحديث الصفحة يدوياً.');
             renderClientOrders();
             renderAdminOrders();
         }
@@ -1031,10 +1046,70 @@
             if (totalOrdersEl) totalOrdersEl.textContent = orders.length;
             if (pendingOrdersEl) pendingOrdersEl.textContent = orders.filter(o => o.status === 'قيد الانتظار').length;
             
+            // Render the orders table
+            const tableBody = document.getElementById('admin-orders-table-body');
+            if (tableBody) {
+                if (orders.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="10" class="empty-msg">لا توجد طلبات حتى الآن.</td></tr>';
+                } else {
+                    tableBody.innerHTML = orders.map(o => `
+                        <tr style="border-bottom: 1px solid #ddd; text-align: right;">
+                            <td>${o.id}</td>
+                            <td><strong>${o.name}</strong></td>
+                            <td>${o.product}</td>
+                            <td>${o.quantity}</td>
+                            <td>${o.price} دج</td>
+                            <td>${o.phone}</td>
+                            <td>${o.wilaya}${o.municipality ? ' - ' + o.municipality : ''}</td>
+                            <td>
+                                <span class="status-badge status-${o.status === 'تم الشحن' ? 'success' : o.status === 'ملغي' ? 'danger' : 'pending'}" 
+                                      style="padding: 5px 10px; border-radius: 4px; background: ${o.status === 'تم الشحن' ? '#4caf50' : o.status === 'ملغي' ? '#f44336' : '#ff9800'}; color: white;">
+                                    ${o.status}
+                                </span>
+                            </td>
+                            <td>${o.date}</td>
+                            <td>
+                                <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
+                                    ${o.status !== 'تم الشحن' ? `<button class="btn-tiny" onclick="updateOrderStatus(${o.id}, 'تم الشحن')" style="background: #4caf50; color: white; padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.8em;">✓ شحن</button>` : ''}
+                                    ${o.status !== 'ملغي' ? `<button class="btn-tiny" onclick="updateOrderStatus(${o.id}, 'ملغي')" style="background: #f44336; color: white; padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.8em;">✕ إلغاء</button>` : ''}
+                                    <button class="btn-tiny" onclick="deleteAdminOrder(${o.id})" style="background: #9c27b0; color: white; padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.8em;">🗑 حذف</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            }
+            
             updateVisitorCount();
             updateAdminBadge();
             renderAdminReviews();
             renderAdminNotifications();
+        }
+
+        // Update order status function
+        function updateOrderStatus(id, newStatus) {
+            db.updateStatus(id, newStatus);
+            const order = db.getOrders().find(o => o.id === id);
+            if (order) {
+                addAdminNotification('status-change', 'تحديث حالة الطلب', `تم تحديث حالة طلب ${order.name} إلى: ${newStatus}`);
+            }
+        }
+
+        // Delete order function (admin can delete any order at any time)
+        function deleteAdminOrder(id) {
+            const confirmed = confirm('هل أنت متأكد من حذف هذا الطلب؟');
+            if (!confirmed) return;
+            
+            const orders = db.getOrders();
+            const order = orders.find(o => o.id === id);
+            const filtered = orders.filter(o => o.id !== id);
+            localStorage.setItem('orders', JSON.stringify(filtered));
+            
+            if (order) {
+                addAdminNotification('order-deleted', 'حذف طلب', `تم حذف طلب ${order.name} - ${order.product}`);
+            }
+            
+            renderAdminOrders();
         }
 
         // External notification helpers - orders saved to admin only, no WhatsApp to customer
@@ -1150,6 +1225,17 @@
         function markNotificationRead(id) {
             db.markNotificationRead(id);
             renderAdminNotifications();
+        }
+
+        function markAllNotificationsAsRead() {
+            const notifications = db.getNotifications();
+            notifications.forEach(n => {
+                if (n.newNotification) {
+                    n.newNotification = false;
+                }
+            });
+            localStorage.setItem('adminNotifications', JSON.stringify(notifications));
+            updateAdminBadge();
         }
 
         function scrollToPendingOrders() {
