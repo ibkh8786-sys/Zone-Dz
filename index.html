@@ -19,7 +19,6 @@
                 <li><a href="javascript:void(0)" onclick="showSection('home')">الصفحة الرئيسية</a></li>
                 <li><a href="javascript:void(0)" onclick="showSection('products')">المنتجات</a></li>
                 <li><a href="javascript:void(0)" onclick="showSection('order')" class="order-link">طلب المنتجات</a></li>
-                <li><a href="javascript:void(0)" onclick="showSection('customer-reviews')">تقييمات الزبائن</a></li>
                 <li><a href="javascript:void(0)" onclick="showSection('contact-support')">تواصل</a></li>
                 <li><a href="javascript:void(0)" onclick="showSection('my-orders')">طلباتي</a></li>
                 <li><a href="javascript:void(0)" onclick="showSection('admin')" class="admin-link" style="display:none;">لوحة التحكم <span id="admin-badge" class="admin-badge hidden">0</span></a></li>
@@ -200,12 +199,6 @@
                 </div>
             </div>
             <!-- End of New Order Management Section -->
-            <div class="admin-reviews-container" style="margin-top:25px;">
-                <h3 style="text-align:right;color:#58a6ff;margin-bottom:12px;">تقييمات الزبائن</h3>
-                <div id="admin-reviews-list" class="reviews-grid">
-                    <p class="empty-msg">لا توجد تقييمات حتى الآن.</p>
-                </div>
-            </div>
         </section>
 
         <!-- Products Section -->
@@ -214,43 +207,6 @@
             <div class="products-grid">
                 <!-- Products will be loaded here by JS -->
                 <p class="empty-msg">لا توجد منتجات حالياً.</p>
-            </div>
-        </section>
-
-        <!-- Customer Reviews Section -->
-        <section id="customer-reviews-section" class="app-section">
-            <h2>تقييمات الزبائن</h2>
-            <div class="reviews-grid">
-                <!-- Reviews will be loaded here by JS -->
-                <p class="empty-msg">لا توجد تقييمات حالياً.</p>
-            </div>
-            <div class="review-form-container">
-                <h3>شارك تقييمك</h3>
-                <form id="review-form">
-                    <div class="form-group">
-                        <label for="review-name">اسمك:</label>
-                        <input type="text" id="review-name" required placeholder="أدخل اسمك">
-                    </div>
-                    <div class="form-group">
-                        <label for="review-rating">التقييم:</label>
-                        <select id="review-rating" required>
-                            <option value="">اختر التقييم</option>
-                            <option value="5">★★★★★ ممتاز</option>
-                            <option value="4">★★★★ جيد جداً</option>
-                            <option value="3">★★★ جيد</option>
-                            <option value="2">★★ متوسط</option>
-                            <option value="1">★ ضعيف</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="review-text">التعليق:</label>
-                        <textarea id="review-text" required placeholder="اكتب تقييمك هنا..."></textarea>
-                    </div>
-                    <button type="submit" class="submit-btn">إرسال التقييم</button>
-                </form>
-                <div id="review-success-message" class="hidden success-msg">
-                    <p>شكراً لك! تم حفظ تقييمك.</p>
-                </div>
             </div>
         </section>
 
@@ -515,7 +471,6 @@
             if (sectionId === 'products') renderProducts();
             if (sectionId === 'offers') renderOffers();
             if (sectionId === 'best-sellers') renderBestSellers();
-            if (sectionId === 'customer-reviews') renderCustomerReviews();
             if (sectionId === 'promo-notifications') renderPromoNotifications();
             if (sectionId === 'product-search') renderSearchResults(document.getElementById('search-input')?.value || '');
         }
@@ -551,8 +506,6 @@
         const offersData = [];
 
         const bestSellersData = [];
-
-        const customerReviewsData = [];
 
         const notificationsData = [
             'عرض اليوم: شحن مجاني للطلبات التي تزيد عن 10000 دج.',
@@ -621,23 +574,6 @@
             `).join('');
         }
 
-        function renderCustomerReviews() {
-            const grid = document.querySelector('#customer-reviews-section .reviews-grid');
-            if (!grid) return;
-            const reviews = [...customerReviewsData, ...db.getReviews()];
-            if (reviews.length === 0) {
-                grid.innerHTML = '<p class="empty-msg">لا توجد تقييمات حالياً.</p>';
-                return;
-            }
-            grid.innerHTML = reviews.map(review => `
-                <div class="review-card">
-                    <div class="rating-stars">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</div>
-                    <p>"${review.text}"</p>
-                    <span>— ${review.customer}</span>
-                </div>
-            `).join('');
-        }
-
         function renderPromoNotifications() {
             const list = document.querySelector('#promo-notifications-section .notifications-list');
             if (!list) return;
@@ -694,53 +630,6 @@
             }
         }
 
-
-        document.getElementById('review-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Rate Limiting
-            if (!checkRateLimit('submit_review', 2, 60000)) {
-                alert('⚠️ محاولات تقييم كثيرة جداً. يرجى الانتظار.');
-                return;
-            }
-            
-            // Get and sanitize inputs
-            const customerName = sanitizeInput(document.getElementById('review-name').value, 'text');
-            const ratingValue = sanitizeInput(document.getElementById('review-rating').value, 'number');
-            const reviewText = sanitizeInput(document.getElementById('review-text').value, 'text');
-            
-            // Validate inputs
-            if (!validateInput(customerName, 'name')) {
-                alert('❌ الاسم يجب أن يكون بين 3 و 100 حرف.');
-                return;
-            }
-            
-            if (!validateInput(ratingValue, 'number') || ratingValue < 1 || ratingValue > 5) {
-                alert('❌ اختر تقييم بين 1 و 5 نجوم.');
-                return;
-            }
-            
-            if (!validateInput(reviewText, 'text')) {
-                alert('❌ نص التقييم مطلوب ولا يجب أن يكون فارغاً.');
-                return;
-            }
-            
-            const review = {
-                customer: customerName,
-                rating: parseInt(ratingValue, 10),
-                text: reviewText,
-                date: new Date().toLocaleDateString('ar-DZ')
-            };
-            db.saveReview(review);
-            addAdminNotification('review', 'تقييم جديد', `العميل: ${review.customer} • التقييم: ${review.rating} نجوم • ${review.text}`);
-            renderAdminReviews();
-            renderCustomerReviews();
-            document.getElementById('review-success-message').classList.remove('hidden');
-            this.reset();
-            setTimeout(() => {
-                document.getElementById('review-success-message').classList.add('hidden');
-            }, 4000);
-        });
 
         // Admin Login Modal Functions
         const adminLoginModal = document.getElementById('admin-login-modal');
@@ -874,15 +763,6 @@
                     localStorage.setItem('orders', JSON.stringify(orders));
                     renderAdminOrders();
                 }
-            },
-            getReviews: () => JSON.parse(localStorage.getItem('customerReviews') || '[]'),
-            saveReview: (review) => {
-                const reviews = db.getReviews();
-                reviews.push({ id: Date.now(), ...review });
-                localStorage.setItem('customerReviews', JSON.stringify(reviews));
-            },
-            clearReviews: () => {
-                localStorage.removeItem('customerReviews');
             },
             getNotifications: () => JSON.parse(localStorage.getItem('adminNotifications') || '[]'),
             saveNotification: (notification) => {
@@ -1082,7 +962,6 @@
             
             updateVisitorCount();
             updateAdminBadge();
-            renderAdminReviews();
             renderAdminNotifications();
         }
 
@@ -1252,7 +1131,7 @@
             }, 100);
         }
 
-        // Admin notifications and reviews
+        // Admin notifications
         function notifyAdmin() {
             updateAdminBadge();
         }
@@ -1339,53 +1218,6 @@
             }
         }
 
-        function renderAdminReviews() {
-            const container = document.getElementById('admin-reviews-list');
-            if (!container) return;
-            const reviews = db.getReviews();
-            if (!reviews.length) {
-                container.innerHTML = '<p class="empty-msg">لا توجد تقييمات حتى الآن.</p>';
-                return;
-            }
-            container.innerHTML = reviews.map(r => `
-                <div class="review-card">
-                    <div class="rating-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
-                    <p>"${r.text}"</p>
-                    <span>— ${r.customer} • ${r.date || ''}</span>
-                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
-                        <button class="btn-small danger" onclick="deleteReview(${r.id})">حذف</button>
-                        <button class="btn-small" onclick="editReview(${r.id})">تعديل</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function deleteReview(id) {
-            const confirmed = confirm('هل أنت متأكد أنك تريد حذف هذا التقييم؟');
-            if (!confirmed) return;
-            const reviews = db.getReviews();
-            const updated = reviews.filter(r => r.id !== id);
-            localStorage.setItem('customerReviews', JSON.stringify(updated));
-            renderAdminReviews();
-            renderCustomerReviews();
-            alert('تم حذف التقييم بنجاح.');
-        }
-
-        function editReview(id) {
-            const reviews = db.getReviews();
-            const review = reviews.find(r => r.id === id);
-            if (!review) return alert('التقييم غير موجود.');
-
-            const newText = prompt('عدّل التقييم:', review.text);
-            if (newText === null) return; // المستخدم ألغى العملية
-            
-            review.text = newText.trim();
-            localStorage.setItem('customerReviews', JSON.stringify(reviews));
-            renderAdminReviews();
-            renderCustomerReviews();
-            alert('تم تحديث التقييم بنجاح.');
-        }
-
         // Initial Render
         document.addEventListener('DOMContentLoaded', () => {
             incrementVisitorCount();
@@ -1404,7 +1236,6 @@
             syncServerOrders();
             renderAdminNotifications();
             renderClientOrders();
-            renderCustomerReviews();
             // renderChatMessages(); // Removed old chat
         });
     </script>
